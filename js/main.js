@@ -10,6 +10,23 @@ $(function() {
   Parse.initialize("MzcDFN8ustfDQhDyohncIvXcvTDRuu1J95y46BCM",
                    "wqU7vFwjZzo35M25hhypr2wxPwH38Ikg1AJr4OhP");
 
+  /*
+  window.onbeforeunload = function() {
+    return "WARNING!!! Data will be lost if you leave the page, are you sure?";
+  };
+  */
+
+  // Parse Objects
+  var Session = Parse.Object.extend("session");
+  var Applicant = Parse.Object.extend("Applicant");
+  var Counter = Parse.Object.extend("Counter");
+
+  // Global Variables
+  var sessions = null;
+  var practiceCount = 0;
+  
+  var keys = ['up','down','left','right'];
+  var keyCode = ['38', '40', '37', '39'];
 
   var AppState = Parse.Object.extend("AppState", {
     defaults: {
@@ -17,9 +34,83 @@ $(function() {
     }
   });
 
-  var Applicant = Parse.Object.extend("Applicant");
+  var PracticeView = Parse.View.extend({
+    el: ".content",
 
-  var Counter = Parse.Object.extend("Counter");
+    currentKey: '',
+
+    initialize: function() {
+      KeyboardJS.on('up', this.onUpKey);
+      KeyboardJS.on('down', this.onDownKey);
+      KeyboardJS.on('left', this.onLeftKey);
+      KeyboardJS.on('right', this.onRightKey);
+      currentKey = Math.round(Math.random()*3);
+
+      this.render();
+    },
+
+    onUpKey: function(a) { // keycode 38
+      if(keyCode[currentKey] == a.keyCode){
+        alert('success!')
+      } else{
+        alert('failure!')
+      }
+    },
+
+    onDownKey: function(a) { // keycode 40
+      if(keyCode[currentKey] == a.keyCode){
+        alert('success!')
+      } else{
+        alert('failure!')
+      }
+    },
+
+    onLeftKey: function(a) { // keycode 37
+      if(keyCode[currentKey] == a.keyCode){
+        alert('success!')
+      } else{
+        alert('failure!')
+      }
+    },
+
+    onRightKey: function(a) { // keycode 39
+      if(keyCode[currentKey] == a.keyCode){
+        alert('success!')
+      } else{
+        alert('failure!')
+      }
+    },
+
+    render: function() {
+      this.$el.html(_.template($("#practice").html()));
+      $('#practice-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[currentKey])
+      this.delegateEvents();
+    }
+  });
+
+
+  var PracticeInstructionsView = Parse.View.extend({
+    events: {
+      "click .continueButton" : "continueToPractice",
+    },
+
+    el: ".content",
+
+    initialize: function() {
+      //_.bindAll(this, "");
+      this.render();
+    },
+
+    continueToPractice: function() {
+      
+    },
+
+    render: function() {
+      this.$el.html(_.template($("#practice-instructions").html()));
+      this.delegateEvents();
+    }
+  });
+
 
   var LogInView = Parse.View.extend({
     events: {
@@ -29,27 +120,30 @@ $(function() {
     el: ".content",
     
     initialize: function() {
+      var self = this;
+
       _.bindAll(this, "signUp");
       this.render();
 
       var query = new Parse.Query(Counter);
       query.descending("count");
       query.limit(1);
+      
       query.find({
         success: function(results) {
           var newApplicantId = 101;
           var latestApplicant = 0;
 
           if(results[0] != undefined){
-            latestApplicant = results[0].get("count");
+            latestApplicant = results[0].get('count');
             newApplicantId = latestApplicant + 1;
+            results[0].increment('count');
+            results[0].save();
+          }else{
+            var newApplicant = new Counter();  
+            newApplicant.save({'count': newApplicantId});
           }
-
-          var newApplicant = new Counter();
-          newApplicant.save({'count': newApplicantId});
-
           this.$("#signup-id").val(newApplicantId);
-          // Do something with the returned Parse.Object values
         },
         error: function(error) {
           alert("Error: " + error.code + " " + error.message);
@@ -59,6 +153,7 @@ $(function() {
     },
 
     signUp: function(e) {
+      e.preventDefault();
       var self = this;
       var id = this.$("#signup-id").val();
       var sex = this.$("#signup-sex").val();
@@ -83,7 +178,10 @@ $(function() {
 
       applicant.save(null, {
         success: function(applicant) {
-          //self.$(".signup-form button").attr("disabled", "");
+          self.$(".signup-form button").attr("disabled", "");
+          new PracticeInstructoinsView();
+          self.undelegateEvents();
+          delete self;
         },
 
         error: function(applicant, error) {
@@ -91,13 +189,13 @@ $(function() {
         }
       })
       
-      //self.$(".signup-form button").attr("disabled", "disabled");
+      self.$(".signup-form button").attr("disabled", "disabled");
 
       return false;
     },
 
     render: function() {
-      this.$el.html(_.template($("#login-template").html()));
+      this.$el.html(_.template($("#login").html()));
       this.delegateEvents();
     }
   });
@@ -113,7 +211,7 @@ $(function() {
     },
 
     render: function() {
-      new LogInView();
+      new PracticeView();
     }
   });
 
@@ -125,6 +223,15 @@ $(function() {
     },
 
     initialize: function(options) {
+      var sessionQuery = new Parse.Query(Session);
+      sessionQuery.find({
+        success: function(results) {
+          sessions = results;
+        },
+        error: function(error) {
+          alert(error);
+        }
+      });
     },
 
   });
@@ -135,4 +242,5 @@ $(function() {
   new AppView;
 
   Parse.history.start();
+
 });
