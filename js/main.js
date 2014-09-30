@@ -35,59 +35,110 @@ $(function() {
   });
 
   var PracticeView = Parse.View.extend({
+    events: {
+      "click .continueButton" : "continueToExperiment",
+    },
+    
     el: ".content",
 
     currentKey: '',
 
-    initialize: function() {
+    initialize: function(redo) {
+      var self = this;
+
+      if(practiceCount == 10){
+        this.renderComplete();
+        return false;
+      }
+      _.bindAll(this, 'onUpKey', 'onDownKey', 'onLeftKey', 'onRightKey', 'renderSuccess', 'renderFail', 'render');
+
       KeyboardJS.on('up', this.onUpKey);
       KeyboardJS.on('down', this.onDownKey);
       KeyboardJS.on('left', this.onLeftKey);
       KeyboardJS.on('right', this.onRightKey);
-      currentKey = Math.round(Math.random()*3);
-
+      if(this.currentKey != undefined && !redo){
+        currentKey = Math.round(Math.random()*3);  
+      }
       this.render();
     },
 
     onUpKey: function(a) { // keycode 38
+
       if(keyCode[currentKey] == a.keyCode){
-        alert('success!')
+        this.renderSuccess();
       } else{
-        alert('failure!')
+        this.renderFail();
       }
     },
 
     onDownKey: function(a) { // keycode 40
       if(keyCode[currentKey] == a.keyCode){
-        alert('success!')
+        this.renderSuccess();
       } else{
-        alert('failure!')
+        this.renderFail();
       }
     },
 
     onLeftKey: function(a) { // keycode 37
       if(keyCode[currentKey] == a.keyCode){
-        alert('success!')
+        this.renderSuccess();
       } else{
-        alert('failure!')
+        this.renderFail();
       }
     },
 
     onRightKey: function(a) { // keycode 39
       if(keyCode[currentKey] == a.keyCode){
-        alert('success!')
+        this.renderSuccess();
       } else{
-        alert('failure!')
+        this.renderFail();
       }
+    },
+
+    continueToExperiment: function() {
+      alert('donesdfsd')
+
+    },
+
+    renderSuccess: function() {
+      practiceCount++;
+      KeyboardJS.clear('up','down','left','right');
+
+      $('.jumbotron h3').html('Great!');
+      $('#practice-item').attr('class', 'glyphicon glyphicon-thumbs-up')
+
+      var self = this;
+      setTimeout(function(){
+        self.initialize(false);
+      }, 1500);
+    },
+
+    renderFail: function() {
+      KeyboardJS.clear('up','down','left','right');
+      
+      $('.jumbotron h3').html('Please Try Again');
+      $('#practice-item').attr('class', 'glyphicon glyphicon-thumbs-down')
+     
+      var self = this;
+      setTimeout(function(){
+        self.initialize(true);
+      }, 1500);
+    },
+
+    renderComplete: function() {
+      KeyboardJS.clear('up','down','left','right');
+
+      this.$el.html(_.template($("#practice-complete").html()));
+      this.delegateEvents();
     },
 
     render: function() {
       this.$el.html(_.template($("#practice").html()));
+      $('.jumbotron h3').html('Press the following key:');
       $('#practice-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[currentKey])
       this.delegateEvents();
     }
   });
-
 
   var PracticeInstructionsView = Parse.View.extend({
     events: {
@@ -97,12 +148,14 @@ $(function() {
     el: ".content",
 
     initialize: function() {
-      //_.bindAll(this, "");
+      var self = this;
       this.render();
     },
 
     continueToPractice: function() {
-      
+      new PracticeView();
+      this.undelegateEvents();
+      delete this ;
     },
 
     render: function() {
@@ -178,8 +231,7 @@ $(function() {
 
       applicant.save(null, {
         success: function(applicant) {
-          self.$(".signup-form button").attr("disabled", "");
-          new PracticeInstructoinsView();
+          new PracticeInstructionsView();
           self.undelegateEvents();
           delete self;
         },
@@ -211,7 +263,7 @@ $(function() {
     },
 
     render: function() {
-      new PracticeView();
+      new LogInView();
     }
   });
 
