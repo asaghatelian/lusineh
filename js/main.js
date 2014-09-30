@@ -23,7 +23,9 @@ $(function() {
 
   // Global Variables
   var sessions = null;
+  var practiceTime;
   var practiceCount = 0;
+  var practiceFailure = 0;
   
   var keys = ['up','down','left','right'];
   var keyCode = ['38', '40', '37', '39'];
@@ -46,20 +48,10 @@ $(function() {
     initialize: function(redo) {
       var self = this;
 
-      if(practiceCount == 10){
-        this.renderComplete();
-        return false;
-      }
       _.bindAll(this, 'onUpKey', 'onDownKey', 'onLeftKey', 'onRightKey', 'renderSuccess', 'renderFail', 'render');
 
-      KeyboardJS.on('up', this.onUpKey);
-      KeyboardJS.on('down', this.onDownKey);
-      KeyboardJS.on('left', this.onLeftKey);
-      KeyboardJS.on('right', this.onRightKey);
-      if(this.currentKey != undefined && !redo){
-        currentKey = Math.round(Math.random()*3);  
-      }
-      this.render();
+      practiceTime = Date.now();
+      this.render(false);
     },
 
     onUpKey: function(a) { // keycode 38
@@ -109,11 +101,12 @@ $(function() {
 
       var self = this;
       setTimeout(function(){
-        self.initialize(false);
+        self.render(false);
       }, 1500);
     },
 
     renderFail: function() {
+      practiceFailure++;
       KeyboardJS.clear('up','down','left','right');
       
       $('.jumbotron h3').html('Please Try Again');
@@ -121,18 +114,36 @@ $(function() {
      
       var self = this;
       setTimeout(function(){
-        self.initialize(true);
+        self.render(true);
       }, 1500);
     },
 
     renderComplete: function() {
       KeyboardJS.clear('up','down','left','right');
+      var totalTries = practiceCount + practiceFailure;
+      var totalTime = (Date.now() - practiceTime) / 1000;
+      alert('total tries = ' + totalTries);
+      alert('total time = ' + totalTime);
 
       this.$el.html(_.template($("#practice-complete").html()));
       this.delegateEvents();
     },
 
-    render: function() {
+    render: function(redo) {
+      if(practiceCount == 10){
+        this.renderComplete();
+        return false;
+      }
+
+      KeyboardJS.on('up', this.onUpKey);
+      KeyboardJS.on('down', this.onDownKey);
+      KeyboardJS.on('left', this.onLeftKey);
+      KeyboardJS.on('right', this.onRightKey);
+
+      if(this.currentKey != undefined && !redo){
+        currentKey = Math.round(Math.random()*3);  
+      }
+
       this.$el.html(_.template($("#practice").html()));
       $('.jumbotron h3').html('Press the following key:');
       $('#practice-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[currentKey])
@@ -281,7 +292,7 @@ $(function() {
           sessions = results;
         },
         error: function(error) {
-          alert(error);
+          alert(error.message);
         }
       });
     },
