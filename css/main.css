@@ -12,3 +12,13 @@
 .jumbotron {
     margin-bottom: 0px;
 }
+
+.error {
+	padding: 10px;
+	margin-bottom: 15px;
+}
+
+.option1, .option2 {
+	white-space: normal;
+	width: 180px;
+}

@@ -26,6 +26,7 @@
       <div><h3><strong>Register </strong></h3></div>
         <div class="panel-body">
           <form role="form" class="signup-form">
+            <div class="error bg-danger" style="display:none"></div>
             <div class="form-group">
               <label for="exampleInputEmail1">Applicant ID (save for later reference)</label>
               <input type="text" class="form-control" id="signup-id" disabled />
@@ -33,7 +34,7 @@
             <div class="form-group">
               <label for="exampleInputPassword1">Sex</label>
                <select class="selectpicker" id="signup-sex" data-style="btn-primary">
-                <option selected="selected">Choose option</option>
+                <option value="" selected="selected">Choose option</option>
                 <option value="m">Male</option>
                 <option value="f">Female</option>
               </select>
@@ -95,6 +96,54 @@
       <button class="btn continueButton">Continue</button>
 
     </script>
+
+    <script type="text/template" id="experiment-instructions">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            When the experiment begins, you will be asked to select one of two options.
+          </p>
+          <p>
+            <strong>Option 1: Commitment Option</strong> – You can commit to complete 10 trials in this session. If you complete your commitment, you will earn $10 upon completion of the session.
+          </p>
+          <p>
+            <strong>Option 2: No Commitment Option</strong> - You will only be required to complete one trial in this session. Once you finish, you will earn $0.50. You can either choose to cash out and obtain your $0.50 or you can choose to complete another trial. You may continue to work on new trials up to 10 times.
+          </p>
+          <p>
+            If you select Option 1, at the end of each trial, you will be offered the choice to switch to Option 2. If you switch, you may cash out at the "Option 2" rate of $0.50 or continue to complete trials in Option 2.
+          </p>
+          <p>
+            Do you have any questions?
+          </p>
+
+        </div>
+      </div>
+
+      <button class="btn continueButton">Continue</button>
+
+    </script>
+  
+    <script type="text/template" id="experiment-options">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron text-center">
+          <h3>Select an Option:</h3>
+          <br />
+          <p>
+            <a class="btn btn-primary btn-lg option1" role="button">Option 1: Commitment</a>
+            <a class="btn btn-primary btn-lg option2" role="button">Option 2: <br/> No Commitment</a>
+          </p>
+
+        </div>
+      </div>
+
+    </script>
+
 
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
     <script src="js/underscore.js"></script>

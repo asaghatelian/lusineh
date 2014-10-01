@@ -26,7 +26,8 @@ $(function() {
   var practiceTime;
   var practiceCount = 0;
   var practiceFailure = 0;
-  
+  var currentApplicant;
+
   var keys = ['up','down','left','right'];
   var keyCode = ['38', '40', '37', '39'];
 
@@ -36,9 +37,66 @@ $(function() {
     }
   });
 
+  var ExperimentView = Parse.View.extend({
+    events: {
+      "click .option1" : "doOption1",
+      "click .option2" : "doOption2"
+    },
+
+    el: ".content",
+
+    initialize: function(){
+      var self = this;
+      this.render();
+    },
+
+    onOption1: function(){
+
+    },
+
+    onOption2: function(){
+
+    },
+
+    render: function(){
+      this.$el.html(_.template($("#experiment-options").html()));
+      this.delegateEvents();
+
+    }
+
+  });
+
+  var InstructionView = Parse.View.extend({
+    el: ".content",
+
+    initialize: function(content, action){
+      var self = this;
+      _.bindAll(this, 'continueToExperiment', 'render');
+      this.render(content, action);
+    },
+
+    continueToExperiment: function(){
+      new ExperimentView();
+      this.undelegateEvents();
+      delete this;
+    },
+
+    render: function(content, action){
+      this.$el.html(_.template($(content).html()));
+      var self = this;
+      var actionToPerform = action;
+      $('.continueButton').click(function() {
+       switch (actionToPerform) {
+        case "continueToExperiment": self.continueToExperiment(); break;
+       }
+      });
+      this.delegateEvents();
+    }
+  });
+
   var PracticeView = Parse.View.extend({
     events: {
-      "click .continueButton" : "continueToExperiment",
+      "click .continueButton" : "continueToExperimentInstructions",
     },
     
     el: ".content",
@@ -87,9 +145,10 @@ $(function() {
       }
     },
 
-    continueToExperiment: function() {
-      alert('donesdfsd')
-
+    continueToExperimentInstructions: function() {
+      new InstructionView("#experiment-instructions", "continueToExperiment");
+      this.undelegateEvents();
+      delete this;
     },
 
     renderSuccess: function() {
@@ -122,15 +181,19 @@ $(function() {
       KeyboardJS.clear('up','down','left','right');
       var totalTries = practiceCount + practiceFailure;
       var totalTime = (Date.now() - practiceTime) / 1000;
-      alert('total tries = ' + totalTries);
-      alert('total time = ' + totalTime);
+
+
+      currentApplicant.set("practiceTime", totalTime);
+      currentApplicant.set("practiceTries", totalTries);
+      currentApplicant.save();
 
       this.$el.html(_.template($("#practice-complete").html()));
       this.delegateEvents();
     },
 
     render: function(redo) {
-      if(practiceCount == 10){
+      
+      if(practiceCount == 1){
         this.renderComplete();
         return false;
       }
@@ -166,7 +229,7 @@ $(function() {
     continueToPractice: function() {
       new PracticeView();
       this.undelegateEvents();
-      delete this ;
+      delete this;
     },
 
     render: function() {
@@ -228,7 +291,7 @@ $(function() {
         self.$(".signup-form .error").html("Please enter a valid ID which is more than 100!").show();
         return false;
       }
-      
+
       if(sex  == '' || age == '' || education == ''){
         self.$(".signup-form .error").html("Please enter valid information!").show();
         return false;
@@ -242,6 +305,7 @@ $(function() {
 
       applicant.save(null, {
         success: function(applicant) {
+          currentApplicant = applicant;
           new PracticeInstructionsView();
           self.undelegateEvents();
           delete self;
@@ -258,7 +322,7 @@ $(function() {
     },
 
     render: function() {
-      this.$el.html(_.template($("#login").html()));
+      this.$el.html(_.template($("#experiment-options").html()));
       this.delegateEvents();
     }
   });
