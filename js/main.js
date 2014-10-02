@@ -20,22 +20,30 @@ $(function() {
   var Session = Parse.Object.extend("session");
   var Applicant = Parse.Object.extend("Applicant");
   var Counter = Parse.Object.extend("Counter");
-  var Counter = Parse.Object.extend("Experiment");
+  var Experiment = Parse.Object.extend("Experiment");
+  var Trial = Parse.Object.extend("Trial");
 
   // Global Variables
   var sessions = null;
-  var practiceTime;
   var practiceCount = 0;
   var practiceFailure = 0;
   
   var currentApplicant;
+  var currentSessionNumber = 0;
+  var currentTrialNumber = 0;
+  var currentExperiment;
+  var experimentType;
+  var responseNumber = 0;
+  var correctResponses = 0;
 
   // Set Defaults
   var appSettings = new Object();
   appSettings.option1Pay=1
   appSettings.option2Pay=0.5
-  appSettings.practiceTotal=10
+  appSettings.practiceTotal=1
 
+  var paymentManager = new Object();
+  var timeManager = new Object();
 
   var keys = ['up','down','left','right'];
   var keyCode = ['38', '40', '37', '39'];
@@ -45,23 +53,147 @@ $(function() {
 
   var ExperimentView = Parse.View.extend({
     events: {
-      "click .option1" : "doOption1",
-      "click .option2" : "doOption2"
+      //"click .continueButton" : "continueToExperimentInstructions",
+    },
+    
+    el: ".content",
+
+    currentKey: '',
+
+    initialize: function() {
+      var self = this;
+
+      _.bindAll(this, 'onNewKey', 'render');
+      
+      if(experimentType == 1){
+        paymentManager.pay=appSettings.option1Pay;
+      }else{
+        paymentManager.pay=appSettings.option2Pay;
+      }
+      
+      timeManager.practiceTime = Date.now();
+      timeManager.totalTime = 0;
+
+      responseNumber = 0;
+      correctResponses = 0;
+
+      KeyboardJS.enable();
+      KeyboardJS.on('up', this.onNewKey);
+      KeyboardJS.on('down', this.onNewKey);
+      KeyboardJS.on('left', this.onNewKey);
+      KeyboardJS.on('right', this.onNewKey);
+
+      this.render(true);
+
+    },
+
+    onNewKey: function(a) { // keycode 38
+      var trial = new Trial();
+      trial.set('responseNumber', ++responseNumber);
+      var timeDifference = (Date.now() - timeManager.trialTimer) / 1000;
+
+      if(responseNumber == 1){
+        trial.set('preRatioPausing', timeDifference.toFixed(2));
+      } else{
+        trial.set('interTrialInterval', timeDifference.toFixed(2));
+      }
+      if(keyCode[currentKey] == a.keyCode){
+        trial.set('response', 1);
+        correctResponses++;
+      } else{
+        trial.set('response', 0)
+      }
+      timeManager.totalTime += timeDifference;
+      trial.set('totalTime', timeManager.totalTime.toFixed(2));
+      //trial.set('ratePerResponse', )
+      trial.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
+      trial.save();
+
+      this.render(false);
+    },
+
+/*
+    continueToExperimentInstructions: function() {
+      new InstructionView("#experiment-instructions", "continueToExperiment");
+      this.undelegateEvents();
+      delete this;
+    },
+
+    renderComplete: function() {
+      KeyboardJS.clear('up','down','left','right');
+      var totalTries = practiceCount + practiceFailure;
+      var totalTime = (Date.now() - timeManager.practiceTime) / 1000;
+
+
+      currentApplicant.set("practiceTime", totalTime);
+      currentApplicant.set("practiceTries", totalTries);
+      currentApplicant.save();
+
+      this.$el.html(_.template($("#practice-complete").html()));
+      this.delegateEvents();
+    },
+*/
+    render: function(isFirstTime) {
+      
+      if(this.currentKey != undefined){
+        currentKey = Math.round(Math.random()*3);
+      }
+
+      if(isFirstTime) {
+        this.$el.html(_.template($("#experiment").html()));
+        $('.jumbotron h3').html('Press the following key:');
+      }
+      
+      $('#experiment-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[currentKey])
+
+      timeManager.trialTimer = new Date();
+
+      this.delegateEvents();
+    }
+  });
+  
+
+  var ExperimentInitialView = Parse.View.extend({
+    events: {
+      "click .option1" : "onOption1",
+      "click .option2" : "onOption2"
     },
 
     el: ".content",
 
     initialize: function(){
       var self = this;
+      if(sessions.length <= 0){
+        alert('done!')
+      }
+      var session = '';
+      var trial = '';
       this.render();
     },
 
     onOption1: function(){
+      currentExperiment = new Experiment();
+      currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
+      var sessionNumber = Math.round(Math.random()*(sessions.length-1));
+      session = sessions.splice(sessionNumber, 1)[0];
+      currentExperiment.set('sessionNumber', ++currentSessionNumber);
+      currentExperiment.set('vrSchedule', session.get('name'));
+      currentExperiment.set('initialSelection', 1);
+      currentExperiment.set('trialNumber', ++currentTrialNumber);
+      var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
+      var trial = session.get('values').splice(trialNumber, 1)[0];
+      currentExperiment.set('responsesInTrial', trial);
+      currentExperiment.save();
+      
+      // Show experiment
+      new ExperimentView();
+      this.undelegateEvents();
+      delete this;
 
     },
 
     onOption2: function(){
-
+      var sessionNumber = Math.round(Math.random()*4);
     },
 
     render: function(){
@@ -82,7 +214,7 @@ $(function() {
     },
 
     continueToExperiment: function(){
-      new ExperimentView();
+      new ExperimentInitialView();
       this.undelegateEvents();
       delete this;
     },
@@ -112,38 +244,20 @@ $(function() {
     initialize: function(redo) {
       var self = this;
 
-      _.bindAll(this, 'onUpKey', 'onDownKey', 'onLeftKey', 'onRightKey', 'renderSuccess', 'renderFail', 'render');
+      _.bindAll(this, 'clearKeys', 'onNewKey', 'renderSuccess', 'renderFail', 'render');
 
-      practiceTime = Date.now();
+      timeManager.practiceTime = Date.now();
       this.render(false);
+
+      KeyboardJS.on('up', this.onNewKey);
+      KeyboardJS.on('down', this.onNewKey);
+      KeyboardJS.on('left', this.onNewKey);
+      KeyboardJS.on('right', this.onNewKey);
+
     },
 
-    onUpKey: function(a) { // keycode 38
+    onNewKey: function(a) { // keycode 38
 
-      if(keyCode[currentKey] == a.keyCode){
-        this.renderSuccess();
-      } else{
-        this.renderFail();
-      }
-    },
-
-    onDownKey: function(a) { // keycode 40
-      if(keyCode[currentKey] == a.keyCode){
-        this.renderSuccess();
-      } else{
-        this.renderFail();
-      }
-    },
-
-    onLeftKey: function(a) { // keycode 37
-      if(keyCode[currentKey] == a.keyCode){
-        this.renderSuccess();
-      } else{
-        this.renderFail();
-      }
-    },
-
-    onRightKey: function(a) { // keycode 39
       if(keyCode[currentKey] == a.keyCode){
         this.renderSuccess();
       } else{
@@ -159,7 +273,7 @@ $(function() {
 
     renderSuccess: function() {
       practiceCount++;
-      KeyboardJS.clear('up','down','left','right');
+      KeyboardJS.disable();
 
       $('.jumbotron h3').html('Great!');
       $('#practice-item').attr('class', 'glyphicon glyphicon-thumbs-up')
@@ -170,10 +284,18 @@ $(function() {
       }, 1500);
     },
 
+    clearKeys: function(){
+      KeyboardJS.clear('up');
+      KeyboardJS.clear('down');
+      KeyboardJS.clear('left');
+      KeyboardJS.clear('right');
+      KeyboardJS.disable();
+    },
+
     renderFail: function() {
       practiceFailure++;
-      KeyboardJS.clear('up','down','left','right');
-      
+      KeyboardJS.disable();
+
       $('.jumbotron h3').html('Please Try Again');
       $('#practice-item').attr('class', 'glyphicon glyphicon-thumbs-down')
      
@@ -184,12 +306,12 @@ $(function() {
     },
 
     renderComplete: function() {
-      KeyboardJS.clear('up','down','left','right');
+      this.clearKeys();
       var totalTries = practiceCount + practiceFailure;
-      var totalTime = (Date.now() - practiceTime) / 1000;
+      var totalTime = (Date.now() - timeManager.practiceTime) / 1000;
 
 
-      currentApplicant.set("practiceTime", totalTime);
+      currentApplicant.set("practiceTime", totalTime.toFixed(2));
       currentApplicant.set("practiceTries", totalTries);
       currentApplicant.save();
 
@@ -204,13 +326,10 @@ $(function() {
         return false;
       }
 
-      KeyboardJS.on('up', this.onUpKey);
-      KeyboardJS.on('down', this.onDownKey);
-      KeyboardJS.on('left', this.onLeftKey);
-      KeyboardJS.on('right', this.onRightKey);
+      KeyboardJS.enable();
 
       if(this.currentKey != undefined && !redo){
-        currentKey = Math.round(Math.random()*3);  
+        currentKey = Math.round(Math.random()*3);
       }
 
       this.$el.html(_.template($("#practice").html()));
@@ -358,6 +477,7 @@ $(function() {
 
     initialize: function(options) {
       var sessionQuery = new Parse.Query(Session);
+      sessionQuery.ascending('number')
       sessionQuery.find({
         success: function(results) {
           sessions = results;
