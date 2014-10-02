@@ -20,21 +20,27 @@ $(function() {
   var Session = Parse.Object.extend("session");
   var Applicant = Parse.Object.extend("Applicant");
   var Counter = Parse.Object.extend("Counter");
+  var Counter = Parse.Object.extend("Experiment");
 
   // Global Variables
   var sessions = null;
   var practiceTime;
   var practiceCount = 0;
   var practiceFailure = 0;
+  
   var currentApplicant;
+
+  // Set Defaults
+  var appSettings = new Object();
+  appSettings.option1Pay=1
+  appSettings.option2Pay=0.5
+  appSettings.practiceTotal=10
+
 
   var keys = ['up','down','left','right'];
   var keyCode = ['38', '40', '37', '39'];
 
   var AppState = Parse.Object.extend("AppState", {
-    defaults: {
-      filter: "all"
-    }
   });
 
   var ExperimentView = Parse.View.extend({
@@ -193,7 +199,7 @@ $(function() {
 
     render: function(redo) {
       
-      if(practiceCount == 1){
+      if(practiceCount == appSettings.practiceTotal){
         this.renderComplete();
         return false;
       }
@@ -322,7 +328,8 @@ $(function() {
     },
 
     render: function() {
-      this.$el.html(_.template($("#experiment-options").html()));
+      this.$el.html(_.template($("#login").html()));
+      //this.$el.html(_.template($("#experiment-options").html()));
       this.delegateEvents();
     }
   });
