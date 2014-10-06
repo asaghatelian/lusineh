@@ -51,27 +51,63 @@ $(function() {
   var AppState = Parse.Object.extend("AppState", {
   });
 
+  function formatAsCurrency(total){
+    return parseFloat(total, 10).toFixed(2);
+  }
+
+  function clearKeys(){
+    KeyboardJS.clear('up');
+    KeyboardJS.clear('down');
+    KeyboardJS.clear('left');
+    KeyboardJS.clear('right');
+    KeyboardJS.disable();
+  }
+
+  function getCurrentExperiment(){
+    
+    var experiment = new Experiment();
+    experiment.set('applicantId', currentApplicant.get('applicantId'));
+    experiment.set('sessionNumber', currentExperiment.get('sessionNumber'));
+    experiment.set('vrSchedule', currentExperiment.get('vrSchedule'));
+    experiment.set('initialSelection', currentExperiment.get('initialSelection'));
+    experiment.set('trialNumber', currentExperiment.get('trialNumber'));
+    experiment.set('responsesInTrial', currentExperiment.get('responsesInTrial'));
+
+    return experiment;
+  }
+
   var ExperimentView = Parse.View.extend({
     events: {
-      //"click .continueButton" : "continueToExperimentInstructions",
+      "click .continueCommitment" : "continueWithCommitment",
     },
     
     el: ".content",
 
     currentKey: '',
 
-    initialize: function() {
+    initialize: function(experimentType) {
       var self = this;
 
-      _.bindAll(this, 'onNewKey', 'render');
+      _.bindAll(this, 'onNewKey', 'render', 'continueWithCommitment');
       
       if(experimentType == 1){
+        var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
+        var trial = session.get('values').splice(trialNumber, 1)[0];
+
         paymentManager.pay=appSettings.option1Pay;
+        currentExperiment = new Experiment();
+        currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
+        currentExperiment.set('sessionNumber', ++currentSessionNumber);
+        currentExperiment.set('vrSchedule', session.get('name'));
+        currentExperiment.set('initialSelection', 1);
+        currentExperiment.set('trialNumber', ++currentTrialNumber);
+        currentExperiment.set('responsesInTrial', trial);
+
       }else{
         paymentManager.pay=appSettings.option2Pay;
       }
       
-      timeManager.practiceTime = Date.now();
+      timeManager.experimentTime = Date.now();
       timeManager.totalTime = 0;
 
       responseNumber = 0;
@@ -84,57 +120,85 @@ $(function() {
       KeyboardJS.on('right', this.onNewKey);
 
       this.render(true);
-
+      var experiment = new Experiment();
     },
 
     onNewKey: function(a) { // keycode 38
-      var trial = new Trial();
-      trial.set('responseNumber', ++responseNumber);
+      experiment = getCurrentExperiment();
+
+      experiment.set('responseNumber', ++responseNumber);
       var timeDifference = (Date.now() - timeManager.trialTimer) / 1000;
 
       if(responseNumber == 1){
-        trial.set('preRatioPausing', timeDifference.toFixed(2));
+        experiment.set('preRatioPausing', timeDifference.toFixed(2));
       } else{
-        trial.set('interTrialInterval', timeDifference.toFixed(2));
+        experiment.set('interTrialInterval', timeDifference.toFixed(2));
       }
       if(keyCode[currentKey] == a.keyCode){
-        trial.set('response', 1);
+        experiment.set('response', 1);
         correctResponses++;
       } else{
-        trial.set('response', 0)
+        experiment.set('response', 0)
       }
+
       timeManager.totalTime += timeDifference;
-      trial.set('totalTime', timeManager.totalTime.toFixed(2));
-      //trial.set('ratePerResponse', )
-      trial.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
-      trial.save();
+      
+      experiment.save();
 
       this.render(false);
     },
 
-/*
-    continueToExperimentInstructions: function() {
-      new InstructionView("#experiment-instructions", "continueToExperiment");
-      this.undelegateEvents();
-      delete this;
+    continueWithCommitment: function(){
+      var responsesInTrial = currentExperiment.get('responsesInTrial');
+      experiment = getCurrentExperiment();
+      
+      experiment.set('totalTime', timeManager.totalTime.toFixed(2));
+      experiment.set('ratePerResponse', (responsesInTrial / timeManager.totalTime).toFixed(2));
+      experiment.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
+      experiment.set('didSwitchToOption2', 'NO');
+      experiment.set('cashEarned', formatAsCurrency(paymentManager.totalPay));
+        
+      experiment.save();
     },
 
-    renderComplete: function() {
-      KeyboardJS.clear('up','down','left','right');
-      var totalTries = practiceCount + practiceFailure;
-      var totalTime = (Date.now() - timeManager.practiceTime) / 1000;
-
-
-      currentApplicant.set("practiceTime", totalTime);
-      currentApplicant.set("practiceTries", totalTries);
-      currentApplicant.save();
-
-      this.$el.html(_.template($("#practice-complete").html()));
-      this.delegateEvents();
-    },
-*/
     render: function(isFirstTime) {
       
+      var responsesInTrial = currentExperiment.get('responsesInTrial');
+
+      if(responseNumber >= responsesInTrial) {
+        clearKeys();
+
+        paymentManager.totalPay = paymentManager.pay * currentTrialNumber;
+
+        if(session.get('values').length == 0){
+          new ExperimentWaitView();
+          this.undelegateEvents();
+          delete this;
+          return false;
+        }
+
+        var modelJson = {
+          "trials" : currentTrialNumber,
+          "payment" : formatAsCurrency(paymentManager.totalPay)
+        }
+
+        this.delegateEvents();
+      
+        var template = _.template($("#option-1-end").html());
+        this.$el.html(template(modelJson));
+
+        $('.option1').click(function() {
+          new ExperimentView(1);
+          delete self;
+        });
+
+        $('.option2').click(function() {
+          
+        });      
+
+        return false;
+      }
+
       if(this.currentKey != undefined){
         currentKey = Math.round(Math.random()*3);
       }
@@ -152,6 +216,94 @@ $(function() {
     }
   });
   
+  var ExperimentWaitView = Parse.View.extend({
+    el: ".content",
+
+    initialize: function(){
+      var self = this;
+      _.bindAll(this, 'startNewSession', 'render');
+      this.render();
+    },
+
+    startNewSession: function(){
+      new ExperimentInstructionsView("#experiment-options", null, "startOption1Experiment", "startOption2Experiment");
+      this.undelegateEvents();
+      delete this;
+    },
+
+    render: function(){
+      var template = _.template($('#experiment-wait').html());
+
+      var modelJson = {
+        "payment" : 5//formatAsCurrency(paymentManager.totalPay)
+      }
+
+      this.$el.html(template(modelJson));
+      
+      $("#getting-started").countdown("2015/01/01", function(event) {
+        $(this).text(
+          event.strftime('%D days %H:%M:%S')
+        );
+      });
+
+      var fiveMinutes = 5 * 60 * 1000;
+      _.delay(this.startNewSession, 5000); 
+      this.delegateEvents();
+    }
+  });
+
+  var ExperimentInstructionsView = Parse.View.extend({
+    el: ".content",
+
+    initialize: function(content, model, action1, action2){
+      var self = this;
+      _.bindAll(this, 'startOption1Experiment', 'startOption2Experiment');
+      this.render(content, model, action1, action2);
+
+    },
+
+    startOption1Experiment: function(){
+      var sessionNumber = Math.round(Math.random()*(sessions.length-1));
+      session = sessions.splice(sessionNumber, 1)[0];
+        
+      new ExperimentView(1);
+      this.undelegateEvents();
+      delete this;
+    },
+
+    startOption2Experiment: function(){
+      new ExperimentView(2);
+      this.undelegateEvents();
+      delete this;
+    },
+
+    render: function(content, model, action1, action2){
+      var self = this;
+      var template = _.template($('#experiment-options').html());
+
+      if(model != null){
+        this.$el.html(template(model.toJSON()));
+      }else{
+        this.$el.html(template  );
+      }
+      var action1ToPerform = action1;
+      var action2ToPerform = action2;
+
+      $('.option1').click(function() {
+       switch (action1ToPerform) {
+        case "startOption1Experiment": self.startOption1Experiment(); break;
+       }
+      });
+
+      $('.option2').click(function() {
+       switch (action2ToPerform) {
+        case "startOption2Experiment": self.startOption2Experiment(); break;
+       }
+      });
+
+      this.delegateEvents();
+    }
+  });
 
   var ExperimentInitialView = Parse.View.extend({
     events: {
@@ -183,7 +335,6 @@ $(function() {
       var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
       var trial = session.get('values').splice(trialNumber, 1)[0];
       currentExperiment.set('responsesInTrial', trial);
-      currentExperiment.save();
       
       // Show experiment
       new ExperimentView();
@@ -214,7 +365,7 @@ $(function() {
     },
 
     continueToExperiment: function(){
-      new ExperimentInitialView();
+      new ExperimentInstructionsView("#experiment-options", null, "startOption1Experiment", "startOption2Experiment");
       this.undelegateEvents();
       delete this;
     },
@@ -244,7 +395,7 @@ $(function() {
     initialize: function(redo) {
       var self = this;
 
-      _.bindAll(this, 'clearKeys', 'onNewKey', 'renderSuccess', 'renderFail', 'render');
+      _.bindAll(this, 'onNewKey', 'renderSuccess', 'renderFail', 'render');
 
       timeManager.practiceTime = Date.now();
       this.render(false);
@@ -284,14 +435,6 @@ $(function() {
       }, 1500);
     },
 
-    clearKeys: function(){
-      KeyboardJS.clear('up');
-      KeyboardJS.clear('down');
-      KeyboardJS.clear('left');
-      KeyboardJS.clear('right');
-      KeyboardJS.disable();
-    },
-
     renderFail: function() {
       practiceFailure++;
       KeyboardJS.disable();
@@ -306,7 +449,7 @@ $(function() {
     },
 
     renderComplete: function() {
-      this.clearKeys();
+      clearKeys();
       var totalTries = practiceCount + practiceFailure;
       var totalTime = (Date.now() - timeManager.practiceTime) / 1000;
 
@@ -464,7 +607,7 @@ $(function() {
     },
 
     render: function() {
-      new LogInView();
+      new ExperimentWaitView();
     }
   });
 

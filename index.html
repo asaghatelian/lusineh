@@ -67,7 +67,6 @@
       </div>
 
       <button class="btn continueButton">Continue</button>
-
     </script>
 
     <script type="text/template" id="practice">
@@ -80,7 +79,6 @@
           <div id="practice-item" class="glyphicon"></div>
         </div>
       </div>
-
     </script>
 
     <script type="text/template" id="practice-complete">
@@ -89,12 +87,13 @@
           <h3>Practice</h3>
         </div>
         <div class="panel-body jumbotron">
-          Congratulations! You have successfully completed the practice segment of this task. If you have any questions, please ask the experimenter at this time.
+          <p>
+            Congratulations! You have successfully completed the practice segment of this task. If you have any questions, please ask the experimenter at this time.
+          </p>
         </div>
       </div>
 
       <button class="btn continueButton">Continue</button>
-
     </script>
 
     <script type="text/template" id="experiment-instructions">
@@ -123,7 +122,6 @@
       </div>
 
       <button class="btn continueButton">Continue</button>
-
     </script>
   
     <script type="text/template" id="experiment-options">
@@ -141,7 +139,6 @@
 
         </div>
       </div>
-
     </script>
 
     <script type="text/template" id="experiment">
@@ -154,14 +151,46 @@
           <div id="experiment-item" class="glyphicon"></div>
         </div>
       </div>
-
     </script>
 
+    <script type="text/template" id="experiment-wait">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            Congratulations! You have completed this session and earned $<%= payment %>. Please take a 5-minute break prior to starting the next session.
+          </p>
+          <br /><br />
+          <div id="getting-started"></div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="option-1-end">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            Congratulations. You have completed <%= trials %> trials. At the Option 1 rate, you have earned $<%= payment %>. If you would like to continue with the commitment option and begin your next trial, please press ‘Continue with Commitment Option.’ If you would like to switch over to Option 2, please press ‘Switch to No Commitment Option’.
+          </p>
+          <br /><br />
+          <p class="text-center">
+            <a class="btn btn-primary btn-lg option1" role="button">Continue with Commitment Option</a>
+            <a class="btn btn-primary btn-lg option2" role="button">Switch to No Commitment Option</a>
+          </p>
+        </div>
+      </div>
+    </script>
 
 
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
     <script src="js/underscore.js"></script>
     <script src="js/keyboard.js"></script>
+    <script src="js/jquery.countdown.min.js"></script>
     <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
     <script src="js/main.js"></script>
 
