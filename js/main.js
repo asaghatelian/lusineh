@@ -162,7 +162,7 @@ $(function() {
       } else{
         experiment.set('interTrialInterval', timeDifference.toFixed(2));
       }
-      if(keyCode[currentKey] == a.keyCode){
+      if(keyCode[this.currentKey] == a.keyCode){
         experiment.set('response', 1);
         correctResponses++;
       } else{
@@ -203,7 +203,12 @@ $(function() {
 
         if(session.get('values').length == 0){
           if(sessions.length == 0){
-            new ExperimentDoneView();
+            var model = {
+              "trials" : currentTrialNumber,
+              "payment" : formatAsCurrency(paymentManager.totalPay)
+            }
+
+            new ExperimentFinalView(model);
             this.undelegateEvents();
             delete this;
             return false;
@@ -237,8 +242,6 @@ $(function() {
           }
         }
 
-
-
         new ExperimentInstructionsView("#experiment-options", model);
 
         this.delegateEvents();
@@ -247,7 +250,10 @@ $(function() {
       }
 
       if(this.currentKey != undefined){
-        currentKey = Math.round(Math.random()*3);
+        var oldKey = this.currentKey;
+        while(oldKey == this.currentKey){
+          this.currentKey = Math.round(Math.random()*3);
+        }
       }
 
       if(isFirstTime) {
@@ -255,11 +261,8 @@ $(function() {
         $('.jumbotron h3').html('Press the following key:');
       }
       
-      $('#experiment-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[currentKey])
+      $('#experiment-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[this.currentKey]);
 
-      timeManager.trialTimer = new Date();
-
-      this.delegateEvents();
     }
   });
   
@@ -319,6 +322,31 @@ $(function() {
     }
   });
 
+    var ExperimentFinalView = Parse.View.extend({
+    events: {
+      "click .continueButton" : "continue",
+    },
+
+    el: ".content",
+
+    initialize: function(model){
+      var self = this;
+      _.bindAll(this, 'continue', 'render');
+      this.render(model);
+    },
+
+    continue: function(){
+      new ExperimentDoneView();
+      this.undelegateEvents();
+      delete this;
+    },
+
+    render: function(model){
+      var template = _.template($('#experiment-final').html());
+      this.$el.html(template(model));
+      this.delegateEvents();
+    }
+  });
 
   var ExperimentInstructionsView = Parse.View.extend({
     el: ".content",
@@ -492,7 +520,7 @@ $(function() {
 
     onNewKey: function(a) { // keycode 38
 
-      if(keyCode[currentKey] == a.keyCode){
+      if(keyCode[this.currentKey] == a.keyCode){
         this.renderSuccess();
       } else{
         this.renderFail();
@@ -555,12 +583,15 @@ $(function() {
       KeyboardJS.enable();
 
       if(this.currentKey != undefined && !redo){
-        currentKey = Math.round(Math.random()*3);
+        var oldKey = this.currentKey;
+        while(oldKey == this.currentKey){
+          this.currentKey = Math.round(Math.random()*3);
+        }
       }
 
       this.$el.html(_.template($("#practice").html()));
       $('.jumbotron h3').html('Press the following key:');
-      $('#practice-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[currentKey])
+      $('#practice-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[this.currentKey])
       this.delegateEvents();
     }
   });
@@ -640,11 +671,13 @@ $(function() {
       
       if(id == '' || isNaN(id) || id < 100){
         self.$(".signup-form .error").html("Please enter a valid ID which is more than 100!").show();
+        delete this;
         return false;
       }
 
-      if(sex  == '' || age == '' || education == ''){
+      if(sex  == '' || isNaN(parseInt(age)) || age == 0 || isNaN(parseInt(education)) || education == ''){
         self.$(".signup-form .error").html("Please enter valid information!").show();
+        delete this;
         return false;
       }
 
@@ -696,9 +729,11 @@ $(function() {
 
   var AppRouter = Parse.Router.extend({
     routes: {
-      "all": "all",
-      "active": "active",
-      "completed": "completed"
+      "export": "export"
+    },
+
+    export: function(){
+      alert('exported!' + currentApplicant.get('applicantId'));
     },
 
     initialize: function(options) {
