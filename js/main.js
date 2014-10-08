@@ -87,7 +87,7 @@ $(function() {
 
     currentKey: '',
 
-    initialize: function(experimentType, doSave, didCashOut) {
+    initialize: function(doSave, didCashOut) {
       var self = this;
 
       _.bindAll(this, 'onNewKey', 'render');
@@ -332,28 +332,31 @@ $(function() {
 
     startOption1Experiment: function(){
       startNewSession();
-        
-      new ExperimentView(1, false, false);
+      
+      experimentType = 1;  
+      new ExperimentView(false, false);
       this.undelegateEvents();
       delete this;
     },
 
     continueOption1Experiment: function(){
-      new ExperimentView(1, true, false);
+      experimentType = 1;
+      new ExperimentView(true, false);
       this.undelegateEvents();
       delete this;
     },
 
     continueOption2Experiment: function(){
-      new ExperimentView(2, true, false);
+      experimentType = 2;
+      new ExperimentView(true, false);
       this.undelegateEvents();
       delete this;
     },
 
     startOption2Experiment: function(){
       startNewSession();
-
-      new ExperimentView(2, false, false);
+      experimentType = 2;
+      new ExperimentView(false, false);
       this.undelegateEvents();
       delete this;
     },
