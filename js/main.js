@@ -63,6 +63,12 @@ $(function() {
     KeyboardJS.disable();
   }
 
+  function startNewSession(){
+    var sessionNumber = Math.round(Math.random()*(sessions.length-1));
+    session = sessions.splice(sessionNumber, 1)[0];
+    currentTrialNumber = 0;
+  }
+
   function getCurrentExperiment(){
     
     var experiment = new Experiment();
@@ -77,34 +83,56 @@ $(function() {
   }
 
   var ExperimentView = Parse.View.extend({
-    events: {
-      "click .continueCommitment" : "continueWithCommitment",
-    },
-    
     el: ".content",
 
     currentKey: '',
 
-    initialize: function(experimentType) {
+    initialize: function(experimentType, doSave, didCashOut) {
       var self = this;
 
-      _.bindAll(this, 'onNewKey', 'render', 'continueWithCommitment');
+      _.bindAll(this, 'onNewKey', 'render');
       
+      var initialSelection = currentExperiment != undefined ? currentExperiment.get('initialSelection') : undefined;
+      
+      if(doSave){
+        var didSwitch = false;
+
+        if(initialSelection == 1 && experimentType == 2){
+          didSwitch = true;
+        }
+
+        this.saveExperimentResults(didSwitch, didCashOut);
+      }
+
       if(experimentType == 1){
         var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
         var trial = session.get('values').splice(trialNumber, 1)[0];
 
-        paymentManager.pay=appSettings.option1Pay;
+        paymentManager.pay = appSettings.option1Pay;
         currentExperiment = new Experiment();
         currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
         currentExperiment.set('sessionNumber', ++currentSessionNumber);
         currentExperiment.set('vrSchedule', session.get('name'));
-        currentExperiment.set('initialSelection', 1);
+        if(initialSelection == undefined){
+          currentExperiment.set('initialSelection', 1);  
+        }
         currentExperiment.set('trialNumber', ++currentTrialNumber);
         currentExperiment.set('responsesInTrial', trial);
 
       }else{
+        var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
+        var trial = session.get('values').splice(trialNumber, 1)[0];
+
         paymentManager.pay=appSettings.option2Pay;
+        currentExperiment = new Experiment();
+        currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
+        currentExperiment.set('sessionNumber', ++currentSessionNumber);
+        currentExperiment.set('vrSchedule', session.get('name'));
+        if(initialSelection == undefined){
+          currentExperiment.set('initialSelection', 2);  
+        }
+        currentExperiment.set('trialNumber', ++currentTrialNumber);
+        currentExperiment.set('responsesInTrial', trial);
       }
       
       timeManager.experimentTime = Date.now();
@@ -148,14 +176,15 @@ $(function() {
       this.render(false);
     },
 
-    continueWithCommitment: function(){
+    saveExperimentResults: function(didSwitch, didCashOut){
       var responsesInTrial = currentExperiment.get('responsesInTrial');
       experiment = getCurrentExperiment();
       
       experiment.set('totalTime', timeManager.totalTime.toFixed(2));
       experiment.set('ratePerResponse', (responsesInTrial / timeManager.totalTime).toFixed(2));
       experiment.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
-      experiment.set('didSwitchToOption2', 'NO');
+      experiment.set('didSwitchToOption2', (didSwitch ? 'YES' : 'NO'));
+      experiment.set('didCashOut', (didCashOut ? 'YES' : 'NO'));
       experiment.set('cashEarned', formatAsCurrency(paymentManager.totalPay));
         
       experiment.save();
@@ -170,32 +199,50 @@ $(function() {
 
         paymentManager.totalPay = paymentManager.pay * currentTrialNumber;
 
+        var model = {};
+
         if(session.get('values').length == 0){
-          new ExperimentWaitView();
-          this.undelegateEvents();
-          delete this;
-          return false;
+          if(sessions.length == 0){
+            new ExperimentDoneView();
+            this.undelegateEvents();
+            delete this;
+            return false;
+          }else{
+            new ExperimentWaitView();
+            this.undelegateEvents();
+            delete this;
+            return false;
+          }
         }
 
-        var modelJson = {
-          "trials" : currentTrialNumber,
-          "payment" : formatAsCurrency(paymentManager.totalPay)
+        if(experimentType == 1){
+          model = {
+            "trials" : currentTrialNumber,
+            "payment" : formatAsCurrency(paymentManager.totalPay),
+            "instructions" : "Congratulations. You have completed <%= trials %> trials. At the Option 1 rate, you have earned $<%= payment %>. If you would like to continue with the commitment option and begin your next trial, please press ‘Continue with Commitment Option.’ If you would like to switch over to Option 2, please press ‘Switch to No Commitment Option’.",
+            "action1" : "continueOption1Experiment",
+            "action2" : "switchOption2Experiment",
+            "button1" : "Continue with Commitment Option",
+            "button2" : "Switch to No Commitment Option"
+          }
+        } else {
+          model = {
+            "trials" : currentTrialNumber,
+            "payment" : formatAsCurrency(paymentManager.totalPay),
+            "instructions" : "Congratulations. You have completed <%= trials %> trial(s). You have earned $<%= payment %>. If you would like to cash out, please press select the option, 'Cash Out'. If you would like to continue on to the next trial, please press 'Continue'.",
+            "action1" : "continueOption2Experiment",
+            "action2" : "cashOut",
+            "button1" : "Continue",
+            "button2" : "Cash Out"
+          }
         }
+
+
+
+        new ExperimentInstructionsView("#experiment-options", model);
 
         this.delegateEvents();
       
-        var template = _.template($("#option-1-end").html());
-        this.$el.html(template(modelJson));
-
-        $('.option1').click(function() {
-          new ExperimentView(1);
-          delete self;
-        });
-
-        $('.option2').click(function() {
-          
-        });      
-
         return false;
       }
 
@@ -226,7 +273,17 @@ $(function() {
     },
 
     startNewSession: function(){
-      new ExperimentInstructionsView("#experiment-options", null, "startOption1Experiment", "startOption2Experiment");
+      $("#wait-time").countdown('destroy')
+      var model = {
+        "action1" : "startOption1Experiment",
+        "action2" : "startOption2Experiment",
+        "button1" : "Option 1: Commitment",
+        "button2" : "Option 2: <br/> No Commitment",
+        "instructions" : "Select an Option:",
+        "centered" : true
+      }
+      new ExperimentInstructionsView("#experiment-options", model);
+
       this.undelegateEvents();
       delete this;
     },
@@ -235,16 +292,12 @@ $(function() {
       var template = _.template($('#experiment-wait').html());
 
       var modelJson = {
-        "payment" : 5//formatAsCurrency(paymentManager.totalPay)
+        "payment" : formatAsCurrency(paymentManager.totalPay)
       }
 
       this.$el.html(template(modelJson));
-      
-      $("#getting-started").countdown("2015/01/01", function(event) {
-        $(this).text(
-          event.strftime('%D days %H:%M:%S')
-        );
-      });
+
+      $("#wait-time").countdown({until: +300, format: "MS"});
 
       var fiveMinutes = 5 * 60 * 1000;
       _.delay(this.startNewSession, 5000); 
@@ -252,107 +305,126 @@ $(function() {
     }
   });
 
+  var ExperimentDoneView = Parse.View.extend({
+    el: ".content",
+
+    initialize: function(){
+      var self = this;
+      this.render();
+    },
+
+    render: function(){
+      this.$el.html(_.template($('#experiment-done').html()));
+      this.delegateEvents();
+    }
+  });
+
+
   var ExperimentInstructionsView = Parse.View.extend({
     el: ".content",
 
-    initialize: function(content, model, action1, action2){
+    initialize: function(content, model){
       var self = this;
-      _.bindAll(this, 'startOption1Experiment', 'startOption2Experiment');
-      this.render(content, model, action1, action2);
+      _.bindAll(this, 'startOption1Experiment', 'continueOption1Experiment', 'continueOption1Experiment', 'startOption2Experiment', 'switchOption2Experiment', 'cashOut');
+      this.render(content, model);
 
     },
 
     startOption1Experiment: function(){
-      var sessionNumber = Math.round(Math.random()*(sessions.length-1));
-      session = sessions.splice(sessionNumber, 1)[0];
+      startNewSession();
         
-      new ExperimentView(1);
+      new ExperimentView(1, false, false);
+      this.undelegateEvents();
+      delete this;
+    },
+
+    continueOption1Experiment: function(){
+      new ExperimentView(1, true, false);
+      this.undelegateEvents();
+      delete this;
+    },
+
+    continueOption2Experiment: function(){
+      new ExperimentView(2, true, false);
       this.undelegateEvents();
       delete this;
     },
 
     startOption2Experiment: function(){
-      new ExperimentView(2);
+      startNewSession();
+
+      new ExperimentView(2, false, false);
       this.undelegateEvents();
       delete this;
     },
 
-    render: function(content, model, action1, action2){
-      var self = this;
-      var template = _.template($('#experiment-options').html());
+    switchOption2Experiment: function(model){
+      paymentManager.pay = appSettings.option2Pay;
+      paymentManager.totalPay = paymentManager.pay * currentTrialNumber;
 
-      if(model != null){
-        this.$el.html(template(model.toJSON()));
-      }else{
-        this.$el.html(template  );
+      newModel = {
+        "trials" : model.trials,
+        "payment" : formatAsCurrency(paymentManager.totalPay),
+        "instructions" : "Congratulations. You have completed <%= trials %> trial(s). At the Option 2 rate, you have earned $<%= payment %>. If you would like to cash out, please press select the option, 'Cash Out'. If you would like to continue on to the next trial, please press 'Continue'.",
+        "action1" : "continueOption2Experiment",
+        "action2" : "cashOut",
+        "button1" : "Continue",
+        "button2" : "Cash Out"
       }
-      var action1ToPerform = action1;
-      var action2ToPerform = action2;
 
-      $('.option1').click(function() {
+      new ExperimentInstructionsView("#experiment-options", newModel);
+      this.undelegateEvents();
+      delete this;
+
+    },
+
+    cashOut: function(){
+      new ExperimentWaitView();
+      this.undelegateEvents();
+      delete this;
+      return false;
+    },
+
+    render: function(content, model){
+      var self = this;
+
+      if(model.centered == undefined) {
+        model.centered = false
+      }
+
+      var template = _.template($(content).html());
+      this.$el.html(template(model));
+
+      var instructionsTemplate = _.template(model.instructions);
+
+      $('.instructions').html(instructionsTemplate(model));
+
+      var action1ToPerform = model.action1;
+      var action2ToPerform = model.action2;
+
+      var button1 = $('.option1');
+      button1.html(model.button1);
+      button1.click(function() {
        switch (action1ToPerform) {
         case "startOption1Experiment": self.startOption1Experiment(); break;
+        case "continueOption1Experiment": self.continueOption1Experiment(); break;
+        case "continueOption2Experiment": self.continueOption2Experiment(); break;
+
        }
       });
 
-      $('.option2').click(function() {
+      var button2 = $('.option2');
+      button2.html(model.button2);
+      button2.click(function() {
        switch (action2ToPerform) {
         case "startOption2Experiment": self.startOption2Experiment(); break;
+        case "switchOption2Experiment": self.switchOption2Experiment(model); break;
+        case "cashOut": self.cashOut(); break;
        }
       });
 
       this.delegateEvents();
     }
-  });
-
-  var ExperimentInitialView = Parse.View.extend({
-    events: {
-      "click .option1" : "onOption1",
-      "click .option2" : "onOption2"
-    },
-
-    el: ".content",
-
-    initialize: function(){
-      var self = this;
-      if(sessions.length <= 0){
-        alert('done!')
-      }
-      var session = '';
-      var trial = '';
-      this.render();
-    },
-
-    onOption1: function(){
-      currentExperiment = new Experiment();
-      currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
-      var sessionNumber = Math.round(Math.random()*(sessions.length-1));
-      session = sessions.splice(sessionNumber, 1)[0];
-      currentExperiment.set('sessionNumber', ++currentSessionNumber);
-      currentExperiment.set('vrSchedule', session.get('name'));
-      currentExperiment.set('initialSelection', 1);
-      currentExperiment.set('trialNumber', ++currentTrialNumber);
-      var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
-      var trial = session.get('values').splice(trialNumber, 1)[0];
-      currentExperiment.set('responsesInTrial', trial);
-      
-      // Show experiment
-      new ExperimentView();
-      this.undelegateEvents();
-      delete this;
-
-    },
-
-    onOption2: function(){
-      var sessionNumber = Math.round(Math.random()*4);
-    },
-
-    render: function(){
-      this.$el.html(_.template($("#experiment-options").html()));
-      this.delegateEvents();
-
-    }
-
   });
 
   var InstructionView = Parse.View.extend({
@@ -365,7 +437,15 @@ $(function() {
     },
 
     continueToExperiment: function(){
-      new ExperimentInstructionsView("#experiment-options", null, "startOption1Experiment", "startOption2Experiment");
+      var model = {
+        "action1" : "startOption1Experiment",
+        "action2" : "startOption2Experiment",
+        "button1" : "Option 1: Commitment",
+        "button2" : "Option 2: <br/> No Commitment",
+        "instructions" : "Select an Option:",
+        "centered" : true
+      }
+      new ExperimentInstructionsView("#experiment-options", model);
       this.undelegateEvents();
       delete this;
     },
@@ -607,7 +687,7 @@ $(function() {
     },
 
     render: function() {
-      new ExperimentWaitView();
+      new LogInView();
     }
   });
 
