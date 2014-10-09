@@ -23,6 +23,26 @@
 
     <!-- Templates -->
 
+    <script type="text/template" id="export">
+      <div><h3><strong>Export</strong></h3></div>
+        <div class="panel-body">
+          <form role="form" class="export-form">
+            <div class="error bg-danger" style="display:none"></div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Applicant ID</label>
+              <input type="text" class="form-control" id="applicant-id" />
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Code</label>
+              <input type="text" class="form-control" id="code" />
+            </div>
+
+            <button type="submit" class="btn export">Export to CSV</button>
+          </form>
+        </div>
+      </div>
+    </script>
+
     <script type="text/template" id="login">
       <div><h3><strong>Register </strong></h3></div>
         <div class="panel-body">
@@ -193,7 +213,7 @@
         </div>
         <div class="panel-body jumbotron">
           <p>
-            Thank you for your participation! Please inform the experimenter at this point.
+            Thank you for your participation! Please inform the experimenter at this point. <br /><br />For reference, your ID is: <%= applicantId %>
           </p>
           <br /><br />
         </div>
@@ -224,6 +244,7 @@
     <script src="js/jquery.plugin.min.js"></script>
     <script src="js/jquery.countdown.js"></script>
     <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
+    <script src="js/export.js"></script>
     <script src="js/main.js"></script>
 
     <!-- Latest compiled and minified JavaScript -->

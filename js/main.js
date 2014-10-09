@@ -67,6 +67,7 @@ $(function() {
     var sessionNumber = Math.round(Math.random()*(sessions.length-1));
     session = sessions.splice(sessionNumber, 1)[0];
     currentTrialNumber = 0;
+    console.log("new session " + sessions.length)
   }
 
   function getCurrentExperiment(){
@@ -82,28 +83,41 @@ $(function() {
     return experiment;
   }
 
+  function saveExperiment(didCashOut){
+
+    var didSwitch = false;
+
+    var initialSelection = currentExperiment != undefined ? currentExperiment.get('initialSelection') : undefined;
+
+    if(initialSelection == 1 && experimentType == 2){
+      didSwitch = true;
+    }
+
+    var responsesInTrial = currentExperiment.get('responsesInTrial');
+    experiment = getCurrentExperiment();
+    
+    experiment.set('totalTime', timeManager.totalTime.toFixed(2));
+    experiment.set('ratePerResponse', (responsesInTrial / timeManager.totalTime).toFixed(2));
+    experiment.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
+    experiment.set('didSwitchToOption2', (didSwitch ? 'YES' : 'NO'));
+    experiment.set('didCashOut', (didCashOut ? 'YES' : 'NO'));
+    experiment.set('cashEarned', formatAsCurrency(paymentManager.totalPay));
+      
+    experiment.save();
+  }
+
   var ExperimentView = Parse.View.extend({
     el: ".content",
 
     currentKey: '',
 
-    initialize: function(doSave, didCashOut) {
+    initialize: function() {
       var self = this;
 
       _.bindAll(this, 'onNewKey', 'render');
       
       var initialSelection = currentExperiment != undefined ? currentExperiment.get('initialSelection') : undefined;
       
-      if(doSave){
-        var didSwitch = false;
-
-        if(initialSelection == 1 && experimentType == 2){
-          didSwitch = true;
-        }
-
-        this.saveExperimentResults(didSwitch, didCashOut);
-      }
-
       if(experimentType == 1){
         var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
         var trial = session.get('values').splice(trialNumber, 1)[0];
@@ -134,8 +148,7 @@ $(function() {
         currentExperiment.set('trialNumber', ++currentTrialNumber);
         currentExperiment.set('responsesInTrial', trial);
       }
-      
-      timeManager.experimentTime = Date.now();
+
       timeManager.totalTime = 0;
 
       responseNumber = 0;
@@ -155,7 +168,7 @@ $(function() {
       experiment = getCurrentExperiment();
 
       experiment.set('responseNumber', ++responseNumber);
-      var timeDifference = (Date.now() - timeManager.trialTimer) / 1000;
+      var timeDifference = (Date.now() - timeManager.experimentTime) / 1000;
 
       if(responseNumber == 1){
         experiment.set('preRatioPausing', timeDifference.toFixed(2));
@@ -174,20 +187,6 @@ $(function() {
       experiment.save();
 
       this.render(false);
-    },
-
-    saveExperimentResults: function(didSwitch, didCashOut){
-      var responsesInTrial = currentExperiment.get('responsesInTrial');
-      experiment = getCurrentExperiment();
-      
-      experiment.set('totalTime', timeManager.totalTime.toFixed(2));
-      experiment.set('ratePerResponse', (responsesInTrial / timeManager.totalTime).toFixed(2));
-      experiment.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
-      experiment.set('didSwitchToOption2', (didSwitch ? 'YES' : 'NO'));
-      experiment.set('didCashOut', (didCashOut ? 'YES' : 'NO'));
-      experiment.set('cashEarned', formatAsCurrency(paymentManager.totalPay));
-        
-      experiment.save();
     },
 
     render: function(isFirstTime) {
@@ -245,7 +244,7 @@ $(function() {
         new ExperimentInstructionsView("#experiment-options", model);
 
         this.delegateEvents();
-      
+        
         return false;
       }
 
@@ -262,7 +261,7 @@ $(function() {
       }
       
       $('#experiment-item').attr('class', 'glyphicon glyphicon-arrow-' + keys[this.currentKey]);
-
+      timeManager.experimentTime = Date.now();
     }
   });
   
@@ -317,7 +316,10 @@ $(function() {
     },
 
     render: function(){
-      this.$el.html(_.template($('#experiment-done').html()));
+      var template = _.template($('#experiment-done').html()); 
+      this.$el.html(template({
+        "applicantId" : currentApplicant.get('applicantId')
+      }));
       this.delegateEvents();
     }
   });
@@ -361,22 +363,24 @@ $(function() {
     startOption1Experiment: function(){
       startNewSession();
       
-      experimentType = 1;  
-      new ExperimentView(false, false);
+      experimentType = 1;
+      new ExperimentView();
       this.undelegateEvents();
       delete this;
     },
 
     continueOption1Experiment: function(){
       experimentType = 1;
-      new ExperimentView(true, false);
+      saveExperiment(false);
+      new ExperimentView();
       this.undelegateEvents();
       delete this;
     },
 
     continueOption2Experiment: function(){
       experimentType = 2;
-      new ExperimentView(true, false);
+      saveExperiment(false);
+      new ExperimentView();
       this.undelegateEvents();
       delete this;
     },
@@ -384,7 +388,7 @@ $(function() {
     startOption2Experiment: function(){
       startNewSession();
       experimentType = 2;
-      new ExperimentView(false, false);
+      new ExperimentView();
       this.undelegateEvents();
       delete this;
     },
@@ -410,8 +414,25 @@ $(function() {
     },
 
     cashOut: function(){
-      new ExperimentWaitView();
-      this.undelegateEvents();
+      saveExperiment(true);
+      
+      if(sessions.length == 0){
+
+        var model = {
+          "trials" : currentTrialNumber,
+          "payment" : formatAsCurrency(paymentManager.totalPay)
+        }
+
+        new ExperimentFinalView(model);
+        this.undelegateEvents();
+
+      } else {
+
+        new ExperimentWaitView();
+        this.undelegateEvents();
+
+      }
+
       delete this;
       return false;
     },
@@ -608,7 +629,9 @@ $(function() {
       this.render();
     },
 
-    continueToPractice: function() {
+    continueToPractice: function(e) {
+      e.preventDefault();
+      var self = this;
       new PracticeView();
       this.undelegateEvents();
       delete this;
@@ -616,6 +639,83 @@ $(function() {
 
     render: function() {
       this.$el.html(_.template($("#practice-instructions").html()));
+      this.delegateEvents();
+    }
+  });
+
+  var ExportView = Parse.View.extend({
+    events: {
+      "click .export" : "export",
+    },
+
+    el: ".content",
+
+    initialize: function() {
+      var self = this;
+      this.render();
+    },
+
+    export: function(e) {
+      e.preventDefault();
+      var self = this;
+      var applicantId = $('#applicant-id').val()
+      var code = $('#code').val()
+
+      if(applicantId == '' || !parseInt(applicantId)){
+        self.$(".export-form .error").html("Please enter a valid ID").show();
+        delete this;
+        return false;
+      }
+
+      if(code != 8855){
+        self.$(".export-form .error").html("Please enter a valid code").show();
+        delete this;
+        return false;
+      }
+
+      var applicantQuery = new Parse.Query(Applicant);
+      applicantQuery.equalTo('applicantId', applicantId);
+
+
+
+      applicantQuery.find({
+        success: function(results) {
+          this.applicant = results[0];
+          this.applicantId = applicant.get('applicantId');
+          
+          var ExperimentCollection = Parse.Collection.extend({
+            model: Experiment,
+            query: (new Parse.Query(Experiment)).equalTo("applicantId", applicantId)
+          });
+          
+          var query = new Parse.Query(Experiment);
+          query.equalTo("applicantId", applicantId);
+          query.ascending("createdAt");
+          
+          var experiments = query.collection();
+          
+          experiments.fetch({
+            success: function(collection) {
+              doExport(applicant.toJSON(), collection.toJSON());
+            },
+            error: function(collection, error) {
+              console.log(error)
+            }
+          });
+
+        },
+        error: function(error) {
+          console.log(error);
+        }
+      });
+      
+    },
+
+    render: function() {
+      this.$el.html(_.template($("#export").html()));
+      if(currentApplicant != undefined && currentApplicant.get('applicantId') != undefined){
+        $('#applicant-id').val(currentApplicant.get('applicantId'));
+      }
       this.delegateEvents();
     }
   });
@@ -707,7 +807,6 @@ $(function() {
 
     render: function() {
       this.$el.html(_.template($("#login").html()));
-      //this.$el.html(_.template($("#experiment-options").html()));
       this.delegateEvents();
     }
   });
@@ -733,7 +832,7 @@ $(function() {
     },
 
     export: function(){
-      alert('exported!' + currentApplicant.get('applicantId'));
+      new ExportView();
     },
 
     initialize: function(options) {
