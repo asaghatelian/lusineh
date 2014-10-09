@@ -1,3 +1,21 @@
+var saveData = (function(){
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+
+    return function (data, fileName) {
+		var buffer = data.join("\n");
+
+        var blob = new Blob([buffer], 
+        	{type: "text/csv;charset=utf8;"}),
+            url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+}());
+
 function doExport(applicant, data) {
 	// prepare CSV data
 	var csvData = new Array();
@@ -10,15 +28,8 @@ function doExport(applicant, data) {
   		csvData.push('"' + getValidData(applicant.applicantId) + '","' + getValidData(applicant.sex) + '","' + getValidData(applicant.age) + '","' + getValidData(applicant.education) + '","' + getValidData(applicant.practiceTime) + '","' + getValidData(applicant.practiceTries) + '",  "' + getValidData(item.sessionNumber) + '",  "' + getValidData(item.vrSchedule) + '",  "' + getValidData(item.initialSelection) + '",  "' + getValidData(item.trialNumber) + '",  "' + getValidData(item.responsesInTrial) + '",  "' + getValidData(item.responseNumber) + '",  "' + getValidData(item.response) + '",  "' + getValidData(item.preRatioPausing) + '",  "' + getValidData(item.interTrialInterval) + '",  "' + getValidData(item.totalTime) + '",  "' + getValidData(item.ratePerResponse) + '",  "' + getValidData(item.percentCorrectResponses) + '",  "' + getValidData(item.didSwitchToOption2) + '",  "' + getValidData(item.didCashOut) + '",  "' + getValidData(item.cashEarned) + '"');
 	});
   	
-	var fileName = "data-" + applicant.applicantId + ".csv";
-	var buffer = csvData.join("\n");
-	var blob = new Blob([buffer], {
-	  "type": "text/csv;charset=utf8;"      
-	});
-
-    var url = window.URL.createObjectURL(blob);
-    window.open(url);
-
+  	var fileName = "data-applicant-" + applicant.applicantId + ".csv";
+  	saveData(csvData, fileName);
 }
 
 function getValidData(data) {
