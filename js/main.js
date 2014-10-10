@@ -33,8 +33,10 @@ $(function() {
   var currentTrialNumber = 0;
   var currentExperiment;
   var experimentType;
+  var previousExperimentType;
   var responseNumber = 0;
   var correctResponses = 0;
+
 
   // Set Defaults
   var appSettings = new Object();
@@ -64,10 +66,10 @@ $(function() {
   }
 
   function startNewSession(){
+    currentSessionNumber++;
     var sessionNumber = Math.round(Math.random()*(sessions.length-1));
     session = sessions.splice(sessionNumber, 1)[0];
     currentTrialNumber = 0;
-    console.log("new session " + sessions.length)
   }
 
   function getCurrentExperiment(){
@@ -85,13 +87,16 @@ $(function() {
 
   function saveExperiment(didCashOut){
 
-    var didSwitch = false;
+    var didSwitch = 'N/A';
 
-    var initialSelection = currentExperiment != undefined ? currentExperiment.get('initialSelection') : undefined;
-
-    if(initialSelection == 1 && experimentType == 2){
-      didSwitch = true;
+    if(previousExperimentType == 1){
+      if(experimentType == 2){
+        didSwitch = 'YES';  
+      } else{
+        didSwitch = 'NO';  
+      }
     }
+    previousExperimentType = experimentType;
 
     var responsesInTrial = currentExperiment.get('responsesInTrial');
     experiment = getCurrentExperiment();
@@ -99,10 +104,10 @@ $(function() {
     experiment.set('totalTime', timeManager.totalTime.toFixed(2));
     experiment.set('ratePerResponse', (responsesInTrial / timeManager.totalTime).toFixed(2));
     experiment.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
-    experiment.set('didSwitchToOption2', (didSwitch ? 'YES' : 'NO'));
+    experiment.set('didSwitchToOption2', didSwitch);
     experiment.set('didCashOut', (didCashOut ? 'YES' : 'NO'));
     experiment.set('cashEarned', formatAsCurrency(paymentManager.totalPay));
-      
+
     experiment.save();
   }
 
@@ -125,7 +130,7 @@ $(function() {
         paymentManager.pay = appSettings.option1Pay;
         currentExperiment = new Experiment();
         currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
-        currentExperiment.set('sessionNumber', ++currentSessionNumber);
+        currentExperiment.set('sessionNumber', currentSessionNumber);
         currentExperiment.set('vrSchedule', session.get('name'));
         if(initialSelection == undefined){
           currentExperiment.set('initialSelection', 1);  
@@ -140,7 +145,7 @@ $(function() {
         paymentManager.pay=appSettings.option2Pay;
         currentExperiment = new Experiment();
         currentExperiment.set('applicantId', currentApplicant.get('applicantId'));
-        currentExperiment.set('sessionNumber', ++currentSessionNumber);
+        currentExperiment.set('sessionNumber', currentSessionNumber);
         currentExperiment.set('vrSchedule', session.get('name'));
         if(initialSelection == undefined){
           currentExperiment.set('initialSelection', 2);  
@@ -165,6 +170,7 @@ $(function() {
     },
 
     onNewKey: function(a) { // keycode 38
+      clearKeys();
       experiment = getCurrentExperiment();
 
       experiment.set('responseNumber', ++responseNumber);
@@ -184,13 +190,29 @@ $(function() {
 
       timeManager.totalTime += timeDifference;
       
-      experiment.save();
+      var self = this;
+      
+      experiment.save({
+        success: function(e){
+          self.render(false);
+        },
+        error: function(e){
+          console.log(e);
+        }
+      });
 
-      this.render(false);
+      
     },
 
     render: function(isFirstTime) {
-      
+      if(!isFirstTime){
+        KeyboardJS.enable();
+        KeyboardJS.on('up', this.onNewKey);
+        KeyboardJS.on('down', this.onNewKey);
+        KeyboardJS.on('left', this.onNewKey);
+        KeyboardJS.on('right', this.onNewKey);
+      }
+
       var responsesInTrial = currentExperiment.get('responsesInTrial');
 
       if(responseNumber >= responsesInTrial) {
@@ -201,12 +223,16 @@ $(function() {
         var model = {};
 
         if(session.get('values').length == 0){
+          previousExperimentType = -1;
+          _.delay(saveExperiment(false), 100);
+          
+          
           if(sessions.length == 0){
             var model = {
               "trials" : currentTrialNumber,
               "payment" : formatAsCurrency(paymentManager.totalPay)
             }
-
+            
             new ExperimentFinalView(model);
             this.undelegateEvents();
             delete this;
@@ -275,6 +301,7 @@ $(function() {
     },
 
     startNewSession: function(){
+      currentExperiment = undefined;
       $("#wait-time").countdown('destroy')
       var model = {
         "action1" : "startOption1Experiment",
@@ -302,7 +329,7 @@ $(function() {
       $("#wait-time").countdown({until: +300, format: "MS"});
 
       var fiveMinutes = 5 * 60 * 1000;
-      _.delay(this.startNewSession, 5000); 
+      _.delay(this.startNewSession, 1000); 
       this.delegateEvents();
     }
   });
@@ -364,6 +391,7 @@ $(function() {
       startNewSession();
       
       experimentType = 1;
+      previousExperimentType = 1;
       new ExperimentView();
       this.undelegateEvents();
       delete this;
@@ -388,6 +416,7 @@ $(function() {
     startOption2Experiment: function(){
       startNewSession();
       experimentType = 2;
+      previousExperimentType = 2;
       new ExperimentView();
       this.undelegateEvents();
       delete this;
@@ -414,6 +443,7 @@ $(function() {
     },
 
     cashOut: function(){
+      previousExperimentType = -1;
       saveExperiment(true);
       
       if(sessions.length == 0){
@@ -676,11 +706,13 @@ $(function() {
       var applicantQuery = new Parse.Query(Applicant);
       applicantQuery.equalTo('applicantId', applicantId);
 
-
-
       applicantQuery.find({
         success: function(results) {
           this.applicant = results[0];
+          if(this.applicant == undefined){
+            alert('error')
+            self.$(".export-form .error").html("The Applicant does not exist!").show();
+          }
           this.applicantId = applicant.get('applicantId');
           
           var ExperimentCollection = Parse.Collection.extend({
@@ -755,7 +787,7 @@ $(function() {
           this.$("#signup-id").val(newApplicantId);
         },
         error: function(error) {
-          alert("Error: " + error.code + " " + error.message);
+          console.log("Error: " + error.code + " " + error.message);
         }
       });
 
@@ -796,7 +828,7 @@ $(function() {
         },
 
         error: function(applicant, error) {
-          alert(error.message)
+          console.log(error.message)
         }
       })
       
@@ -843,7 +875,7 @@ $(function() {
           sessions = results;
         },
         error: function(error) {
-          alert(error.message);
+          console.log(error.message);
         }
       });
     },

@@ -25,7 +25,7 @@ function doExport(applicant, data) {
 		return false;
 	}
 	data.forEach(function(item, index, array) {
-  		csvData.push('"' + getValidData(applicant.applicantId) + '","' + getValidData(applicant.sex) + '","' + getValidData(applicant.age) + '","' + getValidData(applicant.education) + '","' + getValidData(applicant.practiceTime) + '","' + getValidData(applicant.practiceTries) + '",  "' + getValidData(item.sessionNumber) + '",  "' + getValidData(item.vrSchedule) + '",  "' + getValidData(item.initialSelection) + '",  "' + getValidData(item.trialNumber) + '",  "' + getValidData(item.responsesInTrial) + '",  "' + getValidData(item.responseNumber) + '",  "' + getValidData(item.response) + '",  "' + getValidData(item.preRatioPausing) + '",  "' + getValidData(item.interTrialInterval) + '",  "' + getValidData(item.totalTime) + '",  "' + getValidData(item.ratePerResponse) + '",  "' + getValidData(item.percentCorrectResponses) + '",  "' + getValidData(item.didSwitchToOption2) + '",  "' + getValidData(item.didCashOut) + '",  "' + getValidData(item.cashEarned) + '"');
+  		csvData.push('"' + getValidData(applicant.applicantId) + '","' + getValidData(applicant.sex) + '","' + getValidData(applicant.age) + '","' + getValidData(applicant.education) + '","' + getValidData(applicant.practiceTime) + '","' + getValidData(applicant.practiceTries) + '",  "' + getValidData(item.sessionNumber) + '",  "' + getValidData(item.vrSchedule) + '",  "' + getValidData(item.initialSelection) + '",  "' + getValidData(item.trialNumber) + '",  "' + getValidData(item.responsesInTrial) + '",  "' + getValidData(item.responseNumber) + '",  "' + getValidData(item.response) + '",  "' + getValidData(item.preRatioPausing) + '",  "' + getValidData(item.interTrialInterval) + '",  "' + getValidData(item.totalTime) + '",  "' + getValidData(item.ratePerResponse) + '",  "' + getValidData(item.percentCorrectResponses) + '",  "' + getValidData(item.didSwitchToOption2) + '",  "' + getValidData(item.didCashOut) + '",  "' + getValidMoneyData(item.cashEarned) + '"');
 	});
   	
   	var fileName = "data-applicant-" + applicant.applicantId + ".csv";
@@ -39,3 +39,9 @@ function getValidData(data) {
 	return data;
 }
 
+function getValidMoneyData(data) {
+  if(data == undefined || data == null){
+    return '';
+  }
+  return "$" + parseFloat(data, 10).toFixed(2);
+}
