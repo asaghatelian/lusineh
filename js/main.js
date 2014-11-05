@@ -101,11 +101,21 @@ $(function() {
     var responsesInTrial = currentExperiment.get('responsesInTrial');
     experiment = getCurrentExperiment();
     
+    var cashOutValue = "";
+    
+    if(didCashOut){
+      cashOutValue = "YES";
+    } else if (!didCashOut && session.get('values').length == 0){
+      cashOutValue = "N/A";
+    } else {
+      cashOutValue = "NO";
+    }
+
     experiment.set('totalTime', timeManager.totalTime.toFixed(2));
     experiment.set('ratePerResponse', (responsesInTrial / timeManager.totalTime).toFixed(2));
     experiment.set('percentCorrectResponses', ((correctResponses / responseNumber)*100).toFixed(2));
     experiment.set('didSwitchToOption2', didSwitch);
-    experiment.set('didCashOut', (didCashOut ? 'YES' : 'NO'));
+    experiment.set('didCashOut', cashOutValue);
     experiment.set('cashEarned', formatAsCurrency(paymentManager.totalPay));
 
     experiment.save();
@@ -443,7 +453,8 @@ $(function() {
     },
 
     cashOut: function(){
-      previousExperimentType = -1;
+      //previousExperimentType = -1;
+      experimentType = 2;
       saveExperiment(true);
       
       if(sessions.length == 0){
