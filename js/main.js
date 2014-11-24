@@ -16,8 +16,12 @@ $(function() {
   };
   */
 
+  var isTest = true;
+
   // Parse Objects
   var Session = Parse.Object.extend("session");
+  var SessionTest = Parse.Object.extend("sessiontest");
+
   var Applicant = Parse.Object.extend("Applicant");
   var Counter = Parse.Object.extend("Counter");
   var Experiment = Parse.Object.extend("Experiment");
@@ -879,7 +883,13 @@ $(function() {
     },
 
     initialize: function(options) {
-      var sessionQuery = new Parse.Query(Session);
+      var sessionQuery = null;
+      if(isTest){
+        sessionQuery = new Parse.Query(SessionTest);
+      } else {
+        sessionQuery = new Parse.Query(Session);
+      }
+      
       sessionQuery.ascending('number')
       sessionQuery.find({
         success: function(results) {
