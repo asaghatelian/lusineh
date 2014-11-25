@@ -17,7 +17,6 @@ $(function() {
   */
 
   var isTest = false;
-  var showTrialNumbers = false;
 
   // Parse Objects
   var Session = Parse.Object.extend("session");
@@ -41,7 +40,7 @@ $(function() {
   var previousExperimentType;
   var responseNumber = 0;
   var correctResponses = 0;
-  var trial = null;
+
 
   // Set Defaults
   var appSettings = new Object();
@@ -75,11 +74,6 @@ $(function() {
     var sessionNumber = Math.round(Math.random()*(sessions.length-1));
     session = sessions.splice(sessionNumber, 1)[0];
     currentTrialNumber = 0;
-  }
-
-  function startNewTrial() {
-    var trialNumber = Math.round(Math.random()*(session.get('values').length-1));
-    trial = session.get('values').splice(trialNumber, 1)[0];
   }
 
   function getCurrentExperiment(){
@@ -261,38 +255,21 @@ $(function() {
           }
         }
 
-        startNewTrial();
-
         if(experimentType == 1){
-          var instructionContent = "Congratulations. You have completed <%= trials %> trials. At the Option 1 rate, you have earned $<%= payment %>. If you would like to continue with the commitment option and begin your next trial, please press ‘Continue with Commitment Option.’ If you would like to switch over to Option 2, please press ‘Switch to No Commitment Option’."
-
-          if(showTrialNumbers){
-            instructionContent += "<br /><br />In your next trial, you must complete <%= trial %> responses."
-          }
-          
           model = {
             "trials" : currentTrialNumber,
-            "trial" : trial,
             "payment" : formatAsCurrency(paymentManager.totalPay),
-            "instructions" : instructionContent,
+            "instructions" : "Congratulations. You have completed <%= trials %> trials. At the Option 1 rate, you have earned $<%= payment %>. If you would like to continue with the commitment option and begin your next trial, please press ‘Continue with Commitment Option.’ If you would like to switch over to Option 2, please press ‘Switch to No Commitment Option’.",
             "action1" : "continueOption1Experiment",
             "action2" : "switchOption2Experiment",
             "button1" : "Continue with Commitment Option",
             "button2" : "Switch to No Commitment Option"
           }
         } else {
-
-          var instructionContent = "Congratulations. You have completed <%= trials %> trial(s). You have earned $<%= payment %>. If you would like to cash out, please press select the option, 'Cash Out'. If you would like to continue on to the next trial, please press 'Continue'."
-
-          if(showTrialNumbers){
-            instructionContent += "<br /><br />In your next trial, you must complete <%= trial %> responses."
-          }
-
           model = {
             "trials" : currentTrialNumber,
-            "trial" : trial,
             "payment" : formatAsCurrency(paymentManager.totalPay),
-            "instructions" : instructionContent,
+            "instructions" : "Congratulations. You have completed <%= trials %> trial(s). You have earned $<%= payment %>. If you would like to cash out, please press select the option, 'Cash Out'. If you would like to continue on to the next trial, please press 'Continue'.",
             "action1" : "continueOption2Experiment",
             "action2" : "cashOut",
             "button1" : "Continue",
@@ -425,7 +402,6 @@ $(function() {
       
       experimentType = 1;
       previousExperimentType = 1;
-      startNewTrial();
       new ExperimentView();
       this.undelegateEvents();
       delete this;
@@ -451,7 +427,6 @@ $(function() {
       startNewSession();
       experimentType = 2;
       previousExperimentType = 2;
-      startNewTrial();
       new ExperimentView();
       this.undelegateEvents();
       delete this;
@@ -461,17 +436,10 @@ $(function() {
       paymentManager.pay = appSettings.option2Pay;
       paymentManager.totalPay = paymentManager.pay * currentTrialNumber;
 
-      var instructionContent = "Congratulations. You have completed <%= trials %> trial(s). At the Option 2 rate, you have earned $<%= payment %>. If you would like to cash out, please press select the option, 'Cash Out'. If you would like to continue on to the next trial, please press 'Continue'."
-
-      if(showTrialNumbers){
-        instructionContent += "<br /><br />In your next trial, you must complete <%= trial %> responses."
-      }
-
       newModel = {
         "trials" : model.trials,
-        "trial" : trial,
         "payment" : formatAsCurrency(paymentManager.totalPay),
-        "instructions" : instructionContent,
+        "instructions" : "Congratulations. You have completed <%= trials %> trial(s). At the Option 2 rate, you have earned $<%= payment %>. If you would like to cash out, please press select the option, 'Cash Out'. If you would like to continue on to the next trial, please press 'Continue'.",
         "action1" : "continueOption2Experiment",
         "action2" : "cashOut",
         "button1" : "Continue",
@@ -925,9 +893,7 @@ $(function() {
     routes: {
       "": "startApp",
       "export": "export",
-      "test": "testMode",
-      "test-show-numbers": "testShowNumbers",
-      "show-numbers": "showNumbers",
+      "test": "testMode"
     },
 
     export: function(){
@@ -937,18 +903,6 @@ $(function() {
     testMode: function(){
       isTest = true;
       appSettings.practiceTotal=1
-      this.startApp();
-    },
-
-    testShowNumbers: function(){
-      isTest = true;
-      showTrialNumbers = true;
-      appSettings.practiceTotal=1
-      this.startApp();
-    },
-
-    showNumbers: function(){
-      showTrialNumbers = true;
       this.startApp();
     },
 
