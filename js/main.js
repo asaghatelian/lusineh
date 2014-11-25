@@ -46,7 +46,7 @@ $(function() {
   var appSettings = new Object();
   appSettings.option1Pay=1
   appSettings.option2Pay=0.5
-  appSettings.practiceTotal=1
+  appSettings.practiceTotal=10
 
   var paymentManager = new Object();
   var timeManager = new Object();
@@ -895,7 +895,7 @@ $(function() {
 
   var AppRouter = Parse.Router.extend({
     routes: {
-      "": "normal",
+      "": "startApp",
       "export": "export",
       "test": "testMode"
     },
@@ -906,10 +906,11 @@ $(function() {
 
     testMode: function(){
       isTest = true;
-      this.normal();
+      appSettings.practiceTotal=1
+      this.startApp();
     },
 
-    normal: function() {
+    startApp: function() {
       var sessionQuery = null;
       
       if(isTest){
