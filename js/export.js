@@ -4,10 +4,10 @@ var saveData = (function(){
     a.style = "display: none";
 
     return function (data, fileName) {
-		var buffer = data.join("\n");
+    var buffer = data.join("\n");
 
         var blob = new Blob([buffer], 
-        	{type: "text/csv;charset=utf8;"}),
+          {type: "text/csv;charset=utf8;"}),
             url = window.URL.createObjectURL(blob);
         a.href = url;
         a.download = fileName;
@@ -25,11 +25,11 @@ function doExport(applicant, data) {
 		return false;
 	}
 	data.forEach(function(item, index, array) {
-  		csvData.push('"' + getValidData(applicant.applicantId) + '","' + getValidData(applicant.sex) + '","' + getValidData(applicant.age) + '","' + getValidData(applicant.education) + '","' + getValidData(applicant.practiceTime) + '","' + getValidData(applicant.practiceTries) + '",  "' + getValidData(item.sessionNumber) + '",  "' + getValidData(item.vrSchedule) + '",  "' + getValidData(item.initialSelection) + '",  "' + getValidData(item.trialNumber) + '",  "' + getValidData(item.responsesInTrial) + '",  "' + getValidData(item.responseNumber) + '",  "' + getValidData(item.response) + '",  "' + getValidData(item.preRatioPausing) + '",  "' + getValidData(item.interTrialInterval) + '",  "' + getValidData(item.totalTime) + '",  "' + getValidData(item.ratePerResponse) + '",  "' + getValidData(item.percentCorrectResponses) + '",  "' + getValidData(item.didSwitchToOption2) + '",  "' + getValidData(item.didCashOut) + '",  "' + getValidMoneyData(item.cashEarned) + '"');
-	});
-  	
-  	var fileName = "data-applicant-" + applicant.applicantId + ".csv";
-  	saveData(csvData, fileName);
+    csvData.push('"' + getValidData(applicant.applicantId) + '","' + getValidData(applicant.sex) + '","' + getValidData(applicant.age) + '","' + getValidData(applicant.education) + '","' + getValidData(applicant.practiceTime) + '","' + getValidData(applicant.practiceTries) + '",  "' + getValidData(item.get("sessionNumber")) + '",  "' + getValidData(item.get("vrSchedule")) + '",  "' + getValidData(item.get("initialSelection")) + '",  "' + getValidData(item.get("trialNumber")) + '",  "' + getValidData(item.get("responsesInTrial")) + '",  "' + getValidData(item.get("responseNumber")) + '",  "' + getValidData(item.get("response")) + '",  "' + getValidData(item.get("preRatioPausing")) + '",  "' + getValidData(item.get("interTrialInterval")) + '",  "' + getValidData(item.get("totalTime")) + '",  "' + getValidData(item.get("ratePerResponse")) + '",  "' + getValidData(item.get("percentCorrectResponses")) + '",  "' + getValidData(item.get("didSwitchToOption2")) + '",  "' + getValidData(item.get("didCashOut")) + '",  "' + getValidMoneyData(item.get("cashEarned")) + '"');	
+  });
+
+	var fileName = "data-applicant-" + applicant.applicantId + ".csv";
+ 	saveData(csvData, fileName);
 }
 
 function getValidData(data) {

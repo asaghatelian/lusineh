@@ -16,7 +16,7 @@ $(function() {
   };
   */
 
-  var isTest = true;
+  var isTest = false;
 
   // Parse Objects
   var Session = Parse.Object.extend("session");
@@ -735,20 +735,40 @@ $(function() {
             query: (new Parse.Query(Experiment)).equalTo("applicantId", applicantId)
           });
           
-          var query = new Parse.Query(Experiment);
-          query.equalTo("applicantId", applicantId);
-          query.ascending("createdAt");
-          
-          var experiments = query.collection();
-          
-          experiments.fetch({
-            success: function(collection) {
-              doExport(applicant.toJSON(), collection.toJSON());
-            },
-            error: function(collection, error) {
-              console.log(error)
+          var result = []
+
+          var processCallback = function(res) {
+            result = result.concat(res);
+            if (res.length === 1000) {
+              process(res[res.length-1].id);
+              return;
             }
-          });
+
+            // do something about the result, result is all the object you needed.
+            doExport(applicant.toJSON(), result);
+          }
+
+          var process = function(skip) {
+
+            var query = new Parse.Query(Experiment);
+            query.equalTo("applicantId", applicantId);
+            query.ascending("createdAt");
+            query.limit(1000)
+
+            if (skip) {
+              query.greaterThan("objectId", skip);
+            }
+
+            query.limit(1000);
+            query.find().then(function querySuccess(res) {
+              processCallback(res);
+            }, function queryFailed(reason) {
+              status.error("query unsuccessful, length of result " + result.length + ", error:" + error.code + " " + error.message);
+            });
+
+          }
+
+          process(false);
 
         },
         error: function(error) {
@@ -875,15 +895,23 @@ $(function() {
 
   var AppRouter = Parse.Router.extend({
     routes: {
-      "export": "export"
+      "": "normal",
+      "export": "export",
+      "test": "testMode"
     },
 
     export: function(){
       new ExportView();
     },
 
-    initialize: function(options) {
+    testMode: function(){
+      isTest = true;
+      this.normal();
+    },
+
+    normal: function() {
       var sessionQuery = null;
+      
       if(isTest){
         sessionQuery = new Parse.Query(SessionTest);
       } else {
@@ -899,6 +927,10 @@ $(function() {
           console.log(error.message);
         }
       });
+
+    },
+
+    initialize: function(options) {
     },
 
   });
