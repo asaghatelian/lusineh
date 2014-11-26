@@ -336,12 +336,22 @@ $(function() {
     startNewSession: function(){
       currentExperiment = undefined;
       $("#wait-time").countdown('destroy')
+      startNewSession();
+      startNewTrial();
+
+      var instructionContent = "Select an Option:";
+
+      if(showTrialNumbers){
+        instructionContent += "<br /><br />In your next trial, you must complete <%= trial %> responses.";
+      }
+
       var model = {
+        "trial" : trial,
         "action1" : "startOption1Experiment",
         "action2" : "startOption2Experiment",
         "button1" : "Option 1: Commitment",
         "button2" : "Option 2: <br/> No Commitment",
-        "instructions" : "Select an Option:",
+        "instructions" : instructionContent,
         "centered" : true
       }
       new ExperimentInstructionsView("#experiment-options", model);
@@ -421,11 +431,9 @@ $(function() {
     },
 
     startOption1Experiment: function(){
-      startNewSession();
-      
+   
       experimentType = 1;
       previousExperimentType = 1;
-      startNewTrial();
       new ExperimentView();
       this.undelegateEvents();
       delete this;
@@ -448,10 +456,8 @@ $(function() {
     },
 
     startOption2Experiment: function(){
-      startNewSession();
       experimentType = 2;
       previousExperimentType = 2;
-      startNewTrial();
       new ExperimentView();
       this.undelegateEvents();
       delete this;
@@ -562,12 +568,22 @@ $(function() {
     },
 
     continueToExperiment: function(){
+      startNewSession();
+      startNewTrial();
+
+      var instructionContent = "Select an Option:";
+
+      if(showTrialNumbers){
+        instructionContent += "<br /><br />In your next trial, you must complete <%= trial %> responses.";
+      }
+
       var model = {
+        "trial" : trial,
         "action1" : "startOption1Experiment",
         "action2" : "startOption2Experiment",
         "button1" : "Option 1: Commitment",
         "button2" : "Option 2: <br/> No Commitment",
-        "instructions" : "Select an Option:",
+        "instructions" : instructionContent,
         "centered" : true
       }
       new ExperimentInstructionsView("#experiment-options", model);
