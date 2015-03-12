@@ -231,7 +231,7 @@ $(function() {
 
       var responsesInTrial = currentExperiment.get('responsesInTrial');
 
-      if(responseNumber >= responsesInTrial) {
+      if(correctResponses >= responsesInTrial) {
         clearKeys();
 
         paymentManager.totalPay = paymentManager.pay * currentTrialNumber;
@@ -797,13 +797,13 @@ $(function() {
             var query = new Parse.Query(Experiment);
             query.equalTo("applicantId", applicantId);
             query.ascending("createdAt");
-            query.limit(1000)
+            query.limit(1000);
 
             if (skip) {
-              query.greaterThan("objectId", skip);
+              //query.greaterThan("objectId", skip);
+              query.skip(1000);
             }
 
-            query.limit(1000);
             query.find().then(function querySuccess(res) {
               processCallback(res);
             }, function queryFailed(reason) {
