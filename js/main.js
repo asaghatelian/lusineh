@@ -769,7 +769,6 @@ $(function() {
         success: function(results) {
           this.applicant = results[0];
           if(this.applicant == undefined){
-            alert('error')
             self.$(".export-form .error").html("The Applicant does not exist!").show();
           }
           this.applicantId = applicant.get('applicantId');
@@ -784,7 +783,7 @@ $(function() {
           var processCallback = function(res) {
             result = result.concat(res);
             if (res.length === 1000) {
-              process(res[res.length-1].id);
+              process(true);
               return;
             }
 
@@ -801,7 +800,7 @@ $(function() {
 
             if (skip) {
               //query.greaterThan("objectId", skip);
-              query.skip(1000);
+              query.skip(result.length);
             }
 
             query.find().then(function querySuccess(res) {
