@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Dissertation Computer Protocol</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+    <link href="css/main.css" media="all" rel="stylesheet" type="text/css"/>
+    <link href="css/jquery.countdown.css" media="all" rel="stylesheet" type="text/css"/>
+
+  </head>
+
+  <body>
+
+    <div id="app">
+      <div class="content">
+      </div>
+    </div>
+
+    <!-- Templates -->
+
+    <script type="text/template" id="export">
+      <div><h3><strong>Export</strong></h3></div>
+        <div class="panel-body">
+          <form role="form" class="export-form">
+            <div class="error bg-danger" style="display:none"></div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Applicant ID</label>
+              <input type="text" class="form-control" id="applicant-id" />
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Code</label>
+              <input type="password" class="form-control" id="code" />
+            </div>
+
+            <button type="submit" class="btn export">Export to CSV</button>
+          </form>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="login">
+      <div><h3><strong>Register </strong></h3></div>
+        <div class="panel-body">
+          <form role="form" class="signup-form">
+            <div class="error bg-danger" style="display:none"></div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Applicant ID (save for later reference)</label>
+              <input type="text" class="form-control" id="signup-id" disabled />
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Sex</label>
+               <select class="selectpicker" id="signup-sex" data-style="btn-primary">
+                <option value="" selected="selected">Choose option</option>
+                <option value="m">Male</option>
+                <option value="f">Female</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Age</label>
+              <input type="text" class="form-control" id="signup-age" placeholder="Age" />
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Years of Education</label>
+              <input type="text" class="form-control" id="signup-education" placeholder="Years of Education" />
+            </div>
+
+            <button type="submit" class="btn">Register</button>
+          </form>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="practice-instructions">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Practice Information</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+          During this program, you will be asked to make button presses on the keyboard. You will be required to press the keyboard key that is presented on the screen. Possible key presses include the up, down, left, and right arrow keys. Let’s practice!
+          </p>
+        </div>
+      </div>
+
+      <button class="btn continueButton">Continue</button>
+    </script>
+
+    <script type="text/template" id="practice">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Practice</h3>
+        </div>
+        <div class="panel-body jumbotron text-center">
+          <h3></h3>
+          <div id="practice-item" class="glyphicon"></div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="practice-complete">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Practice</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            Congratulations! You have successfully completed the practice segment of this task. If you have any questions, please ask the experimenter at this time.
+          </p>
+        </div>
+      </div>
+
+      <button class="btn continueButton">Continue</button>
+    </script>
+
+    <script type="text/template" id="experiment-instructions">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            When the experiment begins, you will be asked to select one of two options.
+          </p>
+          <p>
+            <strong>Option 1: Commitment Option</strong> – You can commit to complete 10 trials in this session. If you complete your commitment, you will earn $10 upon completion of the session.
+          </p>
+          <p>
+            <strong>Option 2: No Commitment Option</strong> - You will only be required to complete one trial in this session. Once you finish, you will earn $0.50. You can either choose to cash out and obtain your $0.50 or you can choose to complete another trial. You may continue to work on new trials up to 10 times.
+          </p>
+          <p>
+            If you select Option 1, at the end of each trial, you will be offered the choice to switch to Option 2. If you switch, you may cash out at the "Option 2" rate of $0.50 or continue to complete trials in Option 2.
+          </p>
+          <p>
+            Do you have any questions?
+          </p>
+
+        </div>
+      </div>
+
+      <button class="btn continueButton">Continue</button>
+    </script>
+  
+    <script type="text/template" id="experiment-options">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron text-center">
+          <h3 class="instructions <%= centered ? '' : 'text-left' %>">temp</h3>
+          <br />
+          <p>
+            <a class="btn btn-primary btn-lg option1" role="button"></a>
+            <a class="btn btn-primary btn-lg option2" role="button"></a>
+          </p>
+
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="experiment-final">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron text-center">
+          <h3 class="instructions text-left">
+            Congratulations. You have completed <%= trials %> trial(s). You have earned $<%= payment %>.
+          </h3>
+          <br />
+          <p>
+            <a class="btn btn-primary btn-lg continueButton" role="button">Continue</a>
+          </p>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="experiment">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron text-center">
+          <h3></h3>
+          <div id="experiment-item" class="glyphicon"></div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="experiment-wait">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            Congratulations! You have completed this session and earned $<%= payment %>. Please take a 5-minute break prior to starting the next session.
+          </p>
+          <br /><br />
+          <div id="wait-time"></div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="experiment-done">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            Thank you for your participation! Please inform the experimenter at this point. <br /><br />For reference, your ID is: <%= applicantId %>
+          </p>
+          <br /><br />
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="option-1-end">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>Experiment</h3>
+        </div>
+        <div class="panel-body jumbotron">
+          <p>
+            Congratulations. You have completed <%= trials %> trials. At the Option 1 rate, you have earned $<%= payment %>. If you would like to continue with the commitment option and begin your next trial, please press ‘Continue with Commitment Option.’ If you would like to switch over to Option 2, please press ‘Switch to No Commitment Option’.
+          </p>
+          <br /><br />
+          <p class="text-center">
+            <a class="btn btn-primary btn-lg option1" role="button">Continue with Commitment Option</a>
+            <a class="btn btn-primary btn-lg option2" role="button">Switch to No Commitment Option</a>
+          </p>
+        </div>
+      </div>
+    </script>
+
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="js/underscore.js"></script>
+    <script src="js/keyboard.js"></script>
+    <script src="js/jquery.plugin.min.js"></script>
+    <script src="js/jquery.countdown.js"></script>
+    <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+  </body>
+
+</html>

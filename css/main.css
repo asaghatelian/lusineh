@@ -1,0 +1,29 @@
+#app {
+    width: 500px;
+    margin: auto;
+    padding-top: 50px;
+}
+
+.glyphicon {
+    font-size: 80px;
+    padding: 15px 0;
+}
+
+.jumbotron {
+    margin-bottom: 0px;
+}
+
+.error {
+	padding: 10px;
+	margin-bottom: 15px;
+}
+
+.btn-lg {
+	white-space: normal;
+	width: 180px;
+}
+
+#wait-time {
+    padding-left: 40px;
+    font-size: 30px;
+}

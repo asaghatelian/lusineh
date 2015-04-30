@@ -1,0 +1,4 @@
+pre-ratio pausing=value from time person presses go until the first response at the beginning of every trial
+inter-trial internal=in between trials
+
+5 sessions, 10 trials per session

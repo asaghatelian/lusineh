@@ -1,0 +1,540 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"app",
+				"applicantId"
+			],
+			[
+				"appli",
+				"applicantId"
+			],
+			[
+				"main",
+				"mainQuery"
+			],
+			[
+				"applicant",
+				"applicantId"
+			],
+			[
+				"applican",
+				"applicantId"
+			],
+			[
+				"applica",
+				"applicantId"
+			],
+			[
+				"save",
+				"saveExperiment"
+			],
+			[
+				"total",
+				"totalPay"
+			],
+			[
+				"delete",
+				"delegateEvents"
+			],
+			[
+				"done",
+				"doneWithExperiment"
+			],
+			[
+				"respon",
+				"responseNumber"
+			],
+			[
+				"res",
+				"responseNumber"
+			],
+			[
+				"option1",
+				"option1Pay"
+			],
+			[
+				"trial",
+				"trialNumber"
+			],
+			[
+				"curr",
+				"currentTrialNumber"
+			],
+			[
+				"curre",
+				"currentSessionNumber"
+			],
+			[
+				"def",
+				"defaulView"
+			],
+			[
+				"action",
+				"actionToPerform"
+			],
+			[
+				"bind",
+				"bindAll"
+			],
+			[
+				"new",
+				"newApplicantId"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "js/main.js",
+			"settings":
+			{
+				"buffer_size": 24486,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "js/export.js",
+			"settings":
+			{
+				"buffer_size": 2313,
+				"line_ending": "Unix",
+				"name": "function doExport(applicantId) {"
+			}
+		},
+		{
+			"file": "index.html",
+			"settings":
+			{
+				"buffer_size": 9548,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "untitled.html",
+			"settings":
+			{
+				"buffer_size": 1383,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "css/main.css",
+			"settings":
+			{
+				"buffer_size": 326,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/arin/Projects/lusineh",
+		"/Users/arin/Projects/lusineh/css",
+		"/Users/arin/Projects/lusineh/js"
+	],
+	"file_history":
+	[
+		"/Users/arin/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/arin/Library/Application Support/Sublime Text 3/Packages/Default/Default (OSX).sublime-keymap",
+		"/Users/arin/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 93.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"cash",
+			"practice",
+			"doExport",
+			"\\t",
+			"getValidDatai",
+			"\\t",
+			"totalTime",
+			"timeManager",
+			"timeManager.trialTimer",
+			"initialSelection",
+			"e.preventDefault();",
+			"new da",
+			"\n      ",
+			"Counter",
+			"query(",
+			"new Applicant",
+			"signup-form .error",
+			"loginview",
+			"ExperimentFinalView",
+			"cashout",
+			"ExperimentView",
+			"did",
+			"saveExperimentResults",
+			"cashout",
+			"loginview",
+			"wait",
+			"experiment-wait",
+			"wait",
+			"ExperimentWaitView",
+			"paymentManager.totalPay",
+			"ExperimentWaitView",
+			".get('value",
+			"option-1",
+			"_.template($(",
+			"option-1-end",
+			"ExperimentInstructionsView",
+			"ExperimentInitialView",
+			"payment",
+			"continueWithCommitment",
+			"paymentManager.totalPay",
+			"ExperimentView",
+			"getCurrentExperiment",
+			"correctResponses",
+			"experimentType",
+			"ExperimentView",
+			"clearKeys",
+			"keyboard",
+			"new ob",
+			"paymentManager",
+			"trials",
+			"currentTrialNumber",
+			"tojson",
+			"trials",
+			"jumbotron",
+			"currentTrialNumber",
+			"paymentManager",
+			"sessions",
+			"session",
+			"new session",
+			"paymentmanager",
+			"ExperimentInstructionsView",
+			"responsesInTrial",
+			"ExperimentInitialView",
+			"this.$el.html(_.template($(content).",
+			"experiment-options",
+			"timeManager.practiceTime",
+			"timeManager",
+			"totalti",
+			"getCurrentExperiment",
+			"currentex",
+			"currentExperiment",
+			"count",
+			"time",
+			"totalTime",
+			"clearKeys",
+			"onNewKey",
+			"keyboard",
+			"please try ",
+			"payment",
+			"#practuce",
+			"function({",
+			"onNewKey",
+			"onKey",
+			"KeyboardJS.on",
+			"practiceTime",
+			"currentExperiment",
+			"experimentview",
+			"\n      ",
+			"      \n",
+			"sessions",
+			"sessions.",
+			"session.",
+			"Applicant",
+			"experiment-options",
+			"PracticeView",
+			"continueToExperiment",
+			"template",
+			"statsTemplate",
+			"manage-todos-template",
+			"_.template",
+			"addOne",
+			"AppState",
+			"  \n"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": true,
+		"replace_history":
+		[
+			"",
+			"getValidData(i",
+			"\",\""
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "js/main.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 24486,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								249,
+								438
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": -0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "js/export.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2313,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								468,
+								468
+							]
+						],
+						"settings":
+						{
+							"auto_name": "function doExport(applicantId) {",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 9548,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								9324,
+								9324
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2801.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "untitled.html",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 1383,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1240,
+								1310
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "css/main.css",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 326,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								224,
+								224
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/CSS/CSS.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"project": "lusineh.sublime-project",
+	"replace":
+	{
+		"height": 64.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 207.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
